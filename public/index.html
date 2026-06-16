@@ -420,8 +420,8 @@ h1,h2{font-family:'Playfair Display',Georgia,serif !important}
 .audit-export-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--accent);background:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer}
 .audit-export-btn:hover{background:var(--accent);color:#fff}
 </style>
-<script src="d3.min.js"></script>
-<script src="topojson.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
 </head>
 <body>
 
@@ -2015,7 +2015,7 @@ async function renderGeoMap(layer){
   _geoScale=1;
 
   let world;
-  try{ world=await d3.json('countries-110m.json'); }
+  try{ world=await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'); }
   catch(e){ console.warn('World atlas load failed',e); }
 
   const projection=d3.geoNaturalEarth1().scale(W/6.5).translate([W/2,H/2]);

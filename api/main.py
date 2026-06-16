@@ -21,7 +21,6 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api.db import (
@@ -521,9 +520,3 @@ def api_audit_csv(request: Request):
         headers={"Content-Disposition": "attachment; filename=audit.csv"}
     )
 
-
-# ── Static — mounted last ─────────────────────────────────────────────────────
-
-from pathlib import Path
-BASE_DIR = Path(__file__).resolve().parent.parent
-app.mount("/", StaticFiles(directory=str(BASE_DIR / "public"), html=True), name="static")
