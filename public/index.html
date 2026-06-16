@@ -353,6 +353,72 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);
 
 .logo{font-family:'Playfair Display',Georgia,serif !important;font-style:italic;color:var(--accent)!important}
 h1,h2{font-family:'Playfair Display',Georgia,serif !important}
+
+/* PROJECT EDITOR */
+.proj-editor-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.proj-editor-backdrop.open{opacity:1;pointer-events:all}
+.proj-editor{background:var(--surface);border-radius:16px;padding:28px 28px 24px;width:min(680px,95vw);max-height:88vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.25)}
+.proj-editor h2{font-size:18px;font-weight:700;margin:0 0 16px}
+.pe-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.pe-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.pe-input{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);width:100%;box-sizing:border-box}
+.pe-input:focus{outline:none;border-color:var(--accent)}
+.pe-textarea{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);width:100%;min-height:72px;resize:vertical;box-sizing:border-box}
+.pe-textarea:focus{outline:none;border-color:var(--accent)}
+.pe-select{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px;color:var(--text);width:100%}
+.pe-task-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.pe-task-row input{flex:1}
+.pe-task-del{background:none;border:1px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;color:var(--red);font-size:12px}
+.pe-task-del:hover{background:var(--red);color:#fff}
+.pe-add-btn{background:none;border:1px dashed var(--accent);border-radius:8px;padding:6px 12px;color:var(--accent);cursor:pointer;font-size:12px;width:100%;margin-top:2px}
+.pe-add-btn:hover{background:var(--accent-lt)}
+.pe-member-row{display:flex;gap:6px;margin-bottom:6px;align-items:center}
+.pe-member-name{flex:1;font-size:13px}
+.pe-footer{display:flex;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+.pe-save-btn{flex:1;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.pe-save-btn:hover{opacity:.9}
+.pe-del-btn{background:none;border:1px solid var(--red);color:var(--red);border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer}
+.pe-del-btn:hover{background:var(--red);color:#fff}
+.pe-msg{font-size:12px;margin-top:8px;min-height:14px;text-align:center}
+.project-card{position:relative}
+.proj-edit-btn{position:absolute;top:14px;right:14px;background:var(--accent);color:#fff;border:none;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;opacity:0;transition:opacity .2s}
+.project-card:hover .proj-edit-btn{opacity:1}
+/* STANDING CTRL */
+.standing-ctrl-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1300;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.standing-ctrl-backdrop.open{opacity:1;pointer-events:all}
+.standing-ctrl{background:var(--surface);border-radius:14px;padding:24px;width:min(400px,95vw);position:relative;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+/* ADMIN CARD CONTROLS */
+.admin-card-controls{border-top:1px solid var(--border);padding-top:10px;margin-top:2px;display:flex;flex-direction:column;gap:8px}
+.acc-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.acc-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);min-width:72px}
+.standing-dot{width:12px;height:12px;border-radius:50%;display:inline-block;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.standing-dot.active-dot{border-color:var(--text)}
+.sd-green{background:var(--green)}.sd-yellow{background:var(--yellow)}.sd-red{background:var(--red)}
+.eligible-checkbox{width:14px;height:14px;cursor:pointer;accent-color:var(--green)}
+.confirm-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--accent);color:var(--accent);background:none;cursor:pointer}
+.confirm-btn:hover{background:var(--accent);color:#fff}
+.acc-msg{font-size:11px;color:var(--green);min-height:14px}
+/* REVIEW QUEUE */
+.review-queue{margin-bottom:16px;padding:12px 16px;border-radius:12px;border:1px solid var(--red);background:color-mix(in srgb,var(--red) 8%,var(--surface))}
+.rq-header{font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px}
+.rq-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;flex-wrap:wrap}
+.rq-item:last-child{border-bottom:none}
+.rq-name{font-weight:600;flex:1}
+.rq-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.rq-red{background:color-mix(in srgb,var(--red) 15%,transparent);color:var(--red)}
+.rq-overdue{background:color-mix(in srgb,var(--yellow) 20%,transparent);color:#92400e}
+.rq-go-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:none;cursor:pointer;color:var(--text)}
+.rq-go-btn:hover{border-color:var(--accent);color:var(--accent)}
+/* AUDIT PAGE */
+.audit-view-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.audit-view-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;color:var(--muted)}
+.audit-view-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.audit-table{width:100%;border-collapse:collapse;font-size:12px}
+.audit-table th{background:var(--surface2);padding:8px 10px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);border-bottom:2px solid var(--border)}
+.audit-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.audit-table tr:hover td{background:var(--surface2)}
+.audit-export-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--accent);background:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer}
+.audit-export-btn:hover{background:var(--accent);color:#fff}
 </style>
 <script src="d3.min.js"></script>
 <script src="topojson.min.js"></script>
@@ -600,6 +666,83 @@ h1,h2{font-family:'Playfair Display',Georgia,serif !important}
       <div class="guide-tip"><strong>⚡ Suggest a project</strong>Have an idea? Hit the "Suggest a Project" button on the Projects page.</div>
       <div class="guide-tip"><strong>🎯 Name click = profile</strong>Click anyone's name chip on a project card and it navigates straight to their profile. Try it!</div>
     </div>
+  </div>
+</div>
+
+
+<!-- PAGE: AUDIT (admin only) -->
+<div class="page" id="page-audit" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <h2 style="margin:0;font-size:20px">🔍 Team Audit</h2>
+    <button class="audit-export-btn" onclick="exportAuditCSV()">⬇ Export CSV</button>
+  </div>
+  <div class="audit-view-tabs">
+    <button class="audit-view-btn active" onclick="switchAuditView('table',this)">📋 Table</button>
+    <button class="audit-view-btn" onclick="switchAuditView('eligibility',this)">✅ Eligibility</button>
+    <button class="audit-view-btn" onclick="switchAuditView('standing',this)">🚦 Standing</button>
+    <button class="audit-view-btn" onclick="switchAuditView('projects',this)">📁 Projects</button>
+  </div>
+  <div id="audit-content"></div>
+</div>
+
+
+<!-- PROJECT EDITOR MODAL -->
+<div class="proj-editor-backdrop" id="proj-editor-modal" onclick="if(event.target.id==='proj-editor-modal')closeProjEditor()">
+  <div class="proj-editor">
+    <button class="admin-close" onclick="closeProjEditor()">✕</button>
+    <h2 id="pe-title">Edit Project</h2>
+    <input type="hidden" id="pe-id"/>
+    <div class="pe-row"><label class="pe-label">Project Name</label><input class="pe-input" id="pe-name" placeholder="Project name…"/></div>
+    <div class="pe-row"><label class="pe-label">Status</label>
+      <select class="pe-select" id="pe-status">
+        <option value="active">🟢 Active</option>
+        <option value="planning">🟡 Planning</option>
+        <option value="wrap">🟣 Wrap-up</option>
+        <option value="complete">🔵 Complete</option>
+        <option value="cancelled">⬜ Cancelled</option>
+      </select>
+    </div>
+    <div class="pe-row"><label class="pe-label">Objective</label><textarea class="pe-textarea" id="pe-obj" placeholder="What is this project trying to achieve?"></textarea></div>
+    <div class="pe-row"><label class="pe-label">Lead / Contact</label><select class="pe-select" id="pe-lead"></select></div>
+    <div class="pe-row"><label class="pe-label">End Date</label><input class="pe-input" type="date" id="pe-end"/></div>
+    <div class="pe-row">
+      <label class="pe-label">Tasks</label>
+      <div id="pe-tasks-list"></div>
+      <button class="pe-add-btn" onclick="addPETask()">+ Add Task</button>
+    </div>
+    <div class="pe-row">
+      <label class="pe-label">Team Members</label>
+      <div id="pe-team-list"></div>
+      <select class="pe-select" id="pe-add-member" style="margin-top:6px"></select>
+      <button class="pe-add-btn" onclick="addPEMember()" style="margin-top:4px">+ Add Member</button>
+    </div>
+    <div class="pe-row"><label class="pe-label">Volunteers Needed (description)</label><input class="pe-input" id="pe-vol-need" placeholder="e.g. Testers needed (leave blank if none)"/></div>
+    <div class="pe-row"><label class="pe-label">Volunteer Slots</label><input class="pe-input" type="number" id="pe-vol-slots" min="0" value="0"/></div>
+    <div class="pe-footer">
+      <button class="pe-save-btn" onclick="saveProjEdit()">💾 Save Changes</button>
+      <button class="pe-del-btn" onclick="deleteProjFromEditor()">🗑 Delete</button>
+    </div>
+    <div class="pe-msg" id="pe-msg"></div>
+  </div>
+</div>
+
+<!-- STANDING CTRL MODAL -->
+<div class="standing-ctrl-backdrop" id="standing-ctrl-modal" onclick="if(event.target.id==='standing-ctrl-modal')closeStandingCtrl()">
+  <div class="standing-ctrl">
+    <button class="admin-close" onclick="closeStandingCtrl()">✕</button>
+    <h3 id="sc-title" style="margin:0 0 14px;font-size:16px">Set Standing</h3>
+    <input type="hidden" id="sc-emp-id"/>
+    <div style="display:flex;gap:10px;margin-bottom:14px">
+      <button class="admin-btn success" onclick="applyStanding('green')" style="flex:1">🟢 Good</button>
+      <button class="admin-btn" onclick="applyStanding('yellow')" style="flex:1;background:var(--yellow);color:#fff;border-color:var(--yellow)">🟡 Watch</button>
+      <button class="admin-btn danger" onclick="applyStanding('red')" style="flex:1">🔴 Flag</button>
+    </div>
+    <div id="sc-note-row" style="display:none;margin-bottom:12px">
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px">Note (required for flag)</label>
+      <textarea class="pe-textarea" id="sc-note" placeholder="Reason for flag…" style="min-height:56px"></textarea>
+      <button class="admin-btn danger" onclick="saveStandingNote()" style="margin-top:8px;width:100%">🔴 Confirm Flag</button>
+    </div>
+    <div id="sc-msg" style="font-size:12px;min-height:14px"></div>
   </div>
 </div>
 
@@ -901,6 +1044,7 @@ function renderProjects(){
     const endStr=p.endDate?new Date(p.endDate).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"TBD";
     const slots=p.volunteers.slots-p.volunteers.filled;
     return`<div class="project-card" id="proj-${p.id}">
+      ${isAdminMode?`<button class="proj-edit-btn" onclick="openProjEditor('${p.id}')">✏️ Edit</button>`:""}
       <div class="project-card-header">
         <div>
           <div class="project-title">${p.name}</div>
@@ -1032,8 +1176,21 @@ function buildProfileCard(e){
       </div>
     </div>
     ${isAdminMode
-      ? `<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap">
-           <a href="${QUIP_SKILLS_URL}" target="_blank" class="skill-tag hb" style="text-decoration:none;cursor:pointer">✏️ Edit Skills in team wiki</a>
+      ? `<div class="admin-card-controls">
+           <div class="acc-row">
+             <span class="acc-label">Standing</span>
+             <span class="standing-dot sd-green${e.standing==="green"?" active-dot":""}" title="Good" onclick="openStandingCtrl('${e.id}')"></span>
+             <span class="standing-dot sd-yellow${e.standing==="yellow"?" active-dot":""}" title="Watch" onclick="openStandingCtrl('${e.id}')"></span>
+             <span class="standing-dot sd-red${e.standing==="red"?" active-dot":""}" title="Flagged" onclick="openStandingCtrl('${e.id}')"></span>
+             ${e.standingOverdue?`<span class="rq-badge rq-overdue" style="margin-left:4px">⏰ Review due</span>`:""}
+           </div>
+           <div class="acc-row">
+             <span class="acc-label">Eligible</span>
+             <input type="checkbox" class="eligible-checkbox" id="elig-${e.id}" ${e.eligible?"checked":""} onchange="toggleEligible('${e.id}',this)"/>
+             <span style="font-size:12px;color:var(--muted)">${e.eligible?"Eligible":"Not eligible"}</span>
+             ${e.standing==="red"||e.standingOverdue?`<button class="confirm-btn" style="margin-left:auto" onclick="confirmReview('${e.id}')">✓ Confirm Reviewed</button>`:""}
+           </div>
+           <div class="acc-msg" id="acc-msg-${e.id}"></div>
          </div>`
       : `<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;font-size:11px;color:var(--muted);text-align:center">
            💬 Need to update this profile? <strong>Contact your team lead.</strong>
@@ -1288,6 +1445,8 @@ async function onSignIn() {
     document.getElementById('auth-panel-view').style.display = 'block';
     populateAdminSelects();
     document.querySelectorAll('.admin-mode-banner').forEach(b => b.classList.add('visible'));
+    document.getElementById('audit-nav-btn').style.display = '';
+    renderReviewQueue();
   }
   document.getElementById('auth-modal').classList.remove('open');
   renderProjects(); renderPeopleTab('all'); runSearch();
@@ -1302,6 +1461,9 @@ function lockAdmin() {
   document.body.classList.remove('admin-mode');
   document.getElementById('auth-modal').classList.remove('open');
   document.querySelectorAll('.admin-mode-banner').forEach(b => b.classList.remove('visible'));
+  document.getElementById('audit-nav-btn').style.display = 'none';
+  renderReviewQueue();
+  if (document.getElementById('page-audit') && document.getElementById('page-audit').style.display !== 'none') showPage('projects');
   // Reload demo data
   loadData(false).then(() => { renderProjects(); renderPeopleTab('all'); runSearch(); });
 }
@@ -2075,6 +2237,290 @@ async function loadData(authenticated) {
   renderPeopleTab('all');
   runSearch();
 })();
+/* ═══════════════════════════════════════════════════
+   PROJECT EDITOR (Spotlight)
+═══════════════════════════════════════════════════ */
+function openProjEditor(pid) {
+  const p = PROJECTS.find(x => x.id === pid);
+  if (!p) return;
+  document.getElementById('pe-id').value = p.id;
+  document.getElementById('pe-title').textContent = '✏️ ' + p.name;
+  document.getElementById('pe-name').value = p.name;
+  document.getElementById('pe-status').value = p.status;
+  document.getElementById('pe-obj').value = p.objective;
+  document.getElementById('pe-end').value = p.endDate ? p.endDate.slice(0,10) : '';
+  document.getElementById('pe-vol-need').value = p.volunteers?.need || '';
+  document.getElementById('pe-vol-slots').value = p.volunteers?.slots || 0;
+  const leadSel = document.getElementById('pe-lead');
+  leadSel.innerHTML = EMPLOYEES.map(e => `<option value="${e.id}"${e.id===p.contact?' selected':''}>${e.name}</option>`).join('');
+  renderPETasks(p.tasks || []);
+  renderPETeam([...p.team], p.roles || {});
+  const sel = document.getElementById('pe-add-member');
+  sel.innerHTML = '<option value="">— Add team member —</option>' +
+    EMPLOYEES.filter(e => !p.team.includes(e.id)).map(e => `<option value="${e.id}">${e.name} (${e.office})</option>`).join('');
+  document.getElementById('pe-msg').textContent = '';
+  document.getElementById('proj-editor-modal').classList.add('open');
+}
+function closeProjEditor() { document.getElementById('proj-editor-modal').classList.remove('open'); }
+function renderPETasks(tasks) {
+  document.getElementById('pe-tasks-list').innerHTML = tasks.map((t, i) =>
+    `<div class="pe-task-row" id="pe-task-${i}">
+       <input class="pe-input pe-task-input" value="${t.replace(/</g,'&lt;').replace(/"/g,'&quot;')}" placeholder="Task…" style="flex:1"/>
+       <button class="pe-task-del" onclick="this.parentElement.remove()">✕</button>
+     </div>`).join('');
+}
+function addPETask() {
+  const div = document.createElement('div');
+  div.className = 'pe-task-row';
+  div.innerHTML = `<input class="pe-input pe-task-input" placeholder="Task…" style="flex:1"/><button class="pe-task-del" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('pe-tasks-list').appendChild(div);
+}
+function renderPETeam(team, roles) {
+  document.getElementById('pe-team-list').innerHTML = team.map(tid => {
+    const emp = EMPLOYEES.find(e => e.id === tid);
+    return `<div class="pe-member-row" id="pe-mem-${tid}">
+      <span class="pe-member-name" style="flex:1;font-size:13px">${emp ? emp.name : tid}</span>
+      <input class="pe-input" placeholder="Role (optional)" value="${(roles[tid]||'').replace(/"/g,'&quot;')}" style="width:130px;font-size:12px" data-emp="${tid}"/>
+      <button class="pe-task-del" onclick="removePEMember('${tid}')">✕</button>
+    </div>`;
+  }).join('');
+}
+function addPEMember() {
+  const sel = document.getElementById('pe-add-member');
+  const tid = sel.value; if (!tid) return;
+  const pid = document.getElementById('pe-id').value;
+  const p = PROJECTS.find(x => x.id === pid);
+  if (!p || p.team.includes(tid)) return;
+  p.team.push(tid);
+  renderPETeam(p.team, p.roles || {});
+  sel.innerHTML = '<option value="">— Add team member —</option>' +
+    EMPLOYEES.filter(e => !p.team.includes(e.id)).map(e => `<option value="${e.id}">${e.name} (${e.office})</option>`).join('');
+  sel.value = '';
+}
+function removePEMember(tid) {
+  const pid = document.getElementById('pe-id').value;
+  const p = PROJECTS.find(x => x.id === pid);
+  if (!p) return;
+  p.team = p.team.filter(x => x !== tid);
+  renderPETeam(p.team, p.roles || {});
+  const sel = document.getElementById('pe-add-member');
+  const emp = EMPLOYEES.find(e => e.id === tid);
+  const opt = document.createElement('option');
+  opt.value = tid; opt.textContent = (emp ? emp.name : tid) + ' (' + (emp?.office||'') + ')';
+  sel.appendChild(opt);
+}
+async function saveProjEdit() {
+  const pid = document.getElementById('pe-id').value;
+  const p = PROJECTS.find(x => x.id === pid);
+  const msgEl = document.getElementById('pe-msg');
+  const tasks = [...document.querySelectorAll('#pe-tasks-list .pe-task-input')].map(i => i.value.trim()).filter(Boolean);
+  const roles = {};
+  document.querySelectorAll('[data-emp]').forEach(inp => { if (inp.value.trim()) roles[inp.dataset.emp] = inp.value.trim(); });
+  const payload = {
+    name:      document.getElementById('pe-name').value.trim(),
+    status:    document.getElementById('pe-status').value,
+    objective: document.getElementById('pe-obj').value.trim(),
+    contact:   document.getElementById('pe-lead').value,
+    endDate:   document.getElementById('pe-end').value || null,
+    tasks, team: p.team, roles,
+    volunteers: { need: document.getElementById('pe-vol-need').value.trim(), slots: parseInt(document.getElementById('pe-vol-slots').value)||0, filled: p.volunteers?.filled||0 }
+  };
+  if (!payload.name) { msgEl.style.color='var(--red)'; msgEl.textContent='Project name required.'; return; }
+  try {
+    msgEl.style.color='var(--muted)'; msgEl.textContent='Saving…';
+    const updated = await apiPatch(`/api/projects/${pid}`, payload);
+    const idx = PROJECTS.findIndex(x => x.id === pid);
+    if (idx >= 0) PROJECTS[idx] = updated;
+    msgEl.style.color='var(--green)'; msgEl.textContent='✓ Saved';
+    setTimeout(closeProjEditor, 700);
+    renderProjects(); populateAdminSelects(); runSearch();
+  } catch(e) { msgEl.style.color='var(--red)'; msgEl.textContent='❌ ' + e.message; }
+}
+async function deleteProjFromEditor() {
+  const pid = document.getElementById('pe-id').value;
+  const p = PROJECTS.find(x => x.id === pid);
+  if (!confirm(`Delete "${p?.name}"? This cannot be undone.`)) return;
+  const msgEl = document.getElementById('pe-msg');
+  try {
+    await apiDelete(`/api/projects/${pid}`);
+    PROJECTS.splice(PROJECTS.findIndex(x => x.id === pid), 1);
+    closeProjEditor(); renderProjects(); populateAdminSelects(); runSearch();
+  } catch(e) { msgEl.style.color='var(--red)'; msgEl.textContent='❌ ' + e.message; }
+}
+
+/* ═══════════════════════════════════════════════════
+   ADMIN PROFILE CARD CONTROLS
+═══════════════════════════════════════════════════ */
+function openStandingCtrl(empId) {
+  const emp = EMPLOYEES.find(e => e.id === empId); if (!emp) return;
+  document.getElementById('sc-emp-id').value = empId;
+  document.getElementById('sc-title').textContent = 'Standing: ' + emp.name;
+  document.getElementById('sc-note').value = '';
+  document.getElementById('sc-note-row').style.display = 'none';
+  document.getElementById('sc-msg').textContent = '';
+  document.getElementById('standing-ctrl-modal').classList.add('open');
+}
+function closeStandingCtrl() { document.getElementById('standing-ctrl-modal').classList.remove('open'); }
+function applyStanding(value) {
+  const noteRow = document.getElementById('sc-note-row');
+  if (value === 'red') { noteRow.style.display = 'block'; document.getElementById('sc-note').focus(); return; }
+  noteRow.style.display = 'none';
+  submitStanding(value, '');
+}
+async function saveStandingNote() {
+  const note = document.getElementById('sc-note').value.trim();
+  if (!note) { const m=document.getElementById('sc-msg'); m.style.color='var(--red)'; m.textContent='Note required for flag.'; return; }
+  await submitStanding('red', note);
+}
+async function submitStanding(value, note) {
+  const empId = document.getElementById('sc-emp-id').value;
+  const msgEl = document.getElementById('sc-msg');
+  try {
+    msgEl.style.color='var(--muted)'; msgEl.textContent='Saving…';
+    const updated = await apiPatch(`/api/employees/${empId}/standing`, { standing: value, note });
+    const idx = EMPLOYEES.findIndex(e => e.id === empId);
+    if (idx >= 0) Object.assign(EMPLOYEES[idx], { standing: updated.standing, standingNote: updated.standing_note, standingOverdue: updated.standing_overdue });
+    msgEl.style.color='var(--green)'; msgEl.textContent='✓ Updated';
+    setTimeout(closeStandingCtrl, 700);
+    renderPeopleTab('all'); renderReviewQueue();
+  } catch(e) { msgEl.style.color='var(--red)'; msgEl.textContent='❌ ' + (e.message||'Error'); }
+}
+async function toggleEligible(empId, checkbox) {
+  const val = checkbox.checked;
+  try {
+    const updated = await apiPatch(`/api/employees/${empId}/eligible`, { eligible: val });
+    const idx = EMPLOYEES.findIndex(e => e.id === empId);
+    if (idx >= 0) EMPLOYEES[idx].eligible = updated.eligible;
+    const msgEl = document.getElementById('acc-msg-' + empId);
+    if (msgEl) { msgEl.style.color='var(--green)'; msgEl.textContent='✓ Saved'; setTimeout(()=>msgEl.textContent='', 2500); }
+  } catch(e) {
+    checkbox.checked = !val;
+    const msgEl = document.getElementById('acc-msg-' + empId);
+    if (msgEl) { msgEl.style.color='var(--red)'; msgEl.textContent='❌ ' + e.message; }
+  }
+}
+async function confirmReview(empId) {
+  try {
+    const updated = await apiPost(`/api/employees/${empId}/standing/confirm`, {});
+    const idx = EMPLOYEES.findIndex(e => e.id === empId);
+    if (idx >= 0) Object.assign(EMPLOYEES[idx], { standing: updated.standing, standingNote: updated.standing_note, standingOverdue: updated.standing_overdue });
+    renderPeopleTab('all'); renderReviewQueue();
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+/* ═══════════════════════════════════════════════════
+   REVIEW QUEUE
+═══════════════════════════════════════════════════ */
+function renderReviewQueue() {
+  const section = document.getElementById('review-queue-section');
+  if (!section) return;
+  if (!isAdminMode) { section.style.display = 'none'; return; }
+  const flagged = EMPLOYEES.filter(e => e.standing === 'red' || e.standingOverdue);
+  if (!flagged.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  section.innerHTML = `<div class="review-queue">
+    <div class="rq-header">⚠️ Needs Review (${flagged.length})</div>
+    ${flagged.map(e => {
+      const badge = e.standing === 'red'
+        ? `<span class="rq-badge rq-red">🔴 Flagged</span>`
+        : `<span class="rq-badge rq-overdue">⏰ Overdue</span>`;
+      return `<div class="rq-item">
+        <span class="rq-name">${e.name}</span>
+        <span style="font-size:11px;color:var(--muted)">${e.office}</span>
+        ${badge}
+        <button class="rq-go-btn" onclick="goToProfile('${e.id}')">View →</button>
+        <button class="confirm-btn" onclick="confirmReview('${e.id}')">✓ Confirm</button>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   AUDIT PAGE
+═══════════════════════════════════════════════════ */
+let _auditView = 'table';
+function switchAuditView(view, btn) {
+  _auditView = view;
+  document.querySelectorAll('.audit-view-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAudit(view);
+}
+function renderAudit(view) {
+  const el = document.getElementById('audit-content'); if (!el) return;
+  if (view === 'table') {
+    el.innerHTML = `<div style="overflow-x:auto"><table class="audit-table">
+      <thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Eligible</th><th>Standing</th><th>Flag Note</th><th>Active Projects</th><th>Goal</th></tr></thead>
+      <tbody>${EMPLOYEES.map(e => {
+        const projs = PROJECTS.filter(p=>p.team.includes(e.id)&&!['complete','cancelled'].includes(p.status));
+        return `<tr>
+          <td><strong>${e.name}</strong></td><td>${e.office}</td><td style="font-size:11px">${e.email||'—'}</td>
+          <td style="color:${e.eligible?'var(--green)':'var(--red)'}">${e.eligible?'✅':'❌'}</td>
+          <td>${e.standing==='green'?'🟢':e.standing==='red'?'🔴':'🟡'} ${e.standing||'—'}</td>
+          <td style="font-size:11px;color:var(--muted);max-width:150px">${e.standingNote||'—'}</td>
+          <td style="font-size:11px">${projs.map(p=>`<span style="background:var(--surface2);padding:2px 6px;border-radius:10px;margin-right:3px;white-space:nowrap">${p.name}</span>`).join('')||'—'}</td>
+          <td style="font-size:11px;max-width:140px">${e.currentGoal||'—'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  } else if (view === 'eligibility') {
+    const elig = EMPLOYEES.filter(e=>e.eligible), inelig = EMPLOYEES.filter(e=>!e.eligible);
+    el.innerHTML = `
+      <div style="display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="padding:14px 20px;border-radius:12px;background:var(--green-lt);border:1px solid var(--green);text-align:center"><div style="font-size:28px;font-weight:700;color:var(--green)">${elig.length}</div><div style="font-size:12px;color:var(--muted)">Eligible</div></div>
+        <div style="padding:14px 20px;border-radius:12px;background:color-mix(in srgb,var(--red) 10%,var(--surface));border:1px solid var(--red);text-align:center"><div style="font-size:28px;font-weight:700;color:var(--red)">${inelig.length}</div><div style="font-size:12px;color:var(--muted)">Not Eligible</div></div>
+      </div>
+      ${inelig.length ? `<h3 style="margin-bottom:8px;font-size:14px;color:var(--red)">❌ Not Eligible</h3>
+        <div style="overflow-x:auto"><table class="audit-table">
+          <thead><tr><th>Name</th><th>Office</th><th>Email</th><th>Standing</th><th>Flag Note</th></tr></thead>
+          <tbody>${inelig.map(e=>`<tr><td><strong>${e.name}</strong></td><td>${e.office}</td><td style="font-size:11px">${e.email||'—'}</td><td>${e.standing==='green'?'🟢':e.standing==='red'?'🔴':'🟡'} ${e.standing}</td><td style="font-size:11px;color:var(--muted)">${e.standingNote||'—'}</td></tr>`).join('')}
+          </tbody></table></div>` : '<p style="color:var(--green);font-size:13px">✅ All team members are currently eligible.</p>'}`;
+  } else if (view === 'standing') {
+    const red = EMPLOYEES.filter(e=>e.standing==='red');
+    const overdue = EMPLOYEES.filter(e=>e.standingOverdue&&e.standing!=='red');
+    const good = EMPLOYEES.filter(e=>e.standing==='green'&&!e.standingOverdue);
+    el.innerHTML = `
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="padding:12px 18px;border-radius:12px;background:color-mix(in srgb,var(--red) 10%,var(--surface));border:1px solid var(--red);text-align:center"><div style="font-size:26px;font-weight:700;color:var(--red)">${red.length}</div><div style="font-size:11px;color:var(--muted)">Flagged</div></div>
+        <div style="padding:12px 18px;border-radius:12px;background:color-mix(in srgb,var(--yellow) 15%,var(--surface));border:1px solid var(--yellow);text-align:center"><div style="font-size:26px;font-weight:700;color:#92400e">${overdue.length}</div><div style="font-size:11px;color:var(--muted)">Overdue</div></div>
+        <div style="padding:12px 18px;border-radius:12px;background:var(--green-lt);border:1px solid var(--green);text-align:center"><div style="font-size:26px;font-weight:700;color:var(--green)">${good.length}</div><div style="font-size:11px;color:var(--muted)">Good Standing</div></div>
+      </div>
+      ${red.length ? `<h3 style="font-size:13px;color:var(--red);margin-bottom:6px">🔴 Flagged</h3>
+        <div style="overflow-x:auto"><table class="audit-table">
+          <thead><tr><th>Name</th><th>Office</th><th>Flag Note</th><th>Reviewed</th><th>Action</th></tr></thead>
+          <tbody>${red.map(e=>`<tr><td><strong>${e.name}</strong></td><td>${e.office}</td><td style="font-size:11px">${e.standingNote||'—'}</td><td style="font-size:11px;color:var(--muted)">${e.standingReviewedAt?new Date(e.standingReviewedAt).toLocaleDateString():'—'}</td><td><button class="confirm-btn" onclick="confirmReview('${e.id}')">✓ Confirm</button></td></tr>`).join('')}
+          </tbody></table></div>` : ''}
+      ${overdue.length ? `<h3 style="font-size:13px;color:#92400e;margin:14px 0 6px">⏰ Overdue for Review</h3>
+        <div style="overflow-x:auto"><table class="audit-table">
+          <thead><tr><th>Name</th><th>Office</th><th>Standing</th><th>Last Reviewed</th><th>Action</th></tr></thead>
+          <tbody>${overdue.map(e=>`<tr><td><strong>${e.name}</strong></td><td>${e.office}</td><td>${e.standing==='green'?'🟢':'🟡'} ${e.standing}</td><td style="font-size:11px;color:var(--muted)">${e.standingReviewedAt?new Date(e.standingReviewedAt).toLocaleDateString():'—'}</td><td><button class="confirm-btn" onclick="confirmReview('${e.id}')">✓ Confirm</button></td></tr>`).join('')}
+          </tbody></table></div>` : ''}
+      ${!red.length&&!overdue.length ? '<p style="color:var(--green);font-size:13px">✅ All standing reviews are current.</p>' : ''}`;
+  } else if (view === 'projects') {
+    el.innerHTML = `<div style="overflow-x:auto"><table class="audit-table">
+      <thead><tr><th>Project</th><th>Status</th><th>Lead</th><th>Team Size</th><th>Volunteers Needed</th><th>Open Slots</th></tr></thead>
+      <tbody>${PROJECTS.map(p => {
+        const lead = EMPLOYEES.find(e=>e.id===p.contact);
+        const slots = (p.volunteers?.slots||0)-(p.volunteers?.filled||0);
+        const sc = p.status==='active'?'var(--green)':p.status==='planning'?'var(--yellow)':p.status==='wrap'?'var(--purple)':p.status==='complete'?'#0369a1':'var(--muted)';
+        return `<tr><td><strong>${p.name}</strong></td><td><span style="font-size:11px;color:${sc};font-weight:700">${p.status}</span></td><td>${lead?.name||'—'}</td><td>${p.team.length}</td><td style="font-size:11px">${p.volunteers?.need||'—'}</td><td style="color:${slots>0?'var(--green)':'var(--muted)'}">${slots>0?slots:'—'}</td></tr>`;
+      }).join('')}</tbody>
+    </table></div>`;
+  }
+}
+function exportAuditCSV() {
+  const headers = ['Name','Email','Office','Eligible','Standing','Flag Note','Last Reviewed','Active Projects','Completed Projects','Current Goal'];
+  const rows = EMPLOYEES.map(e => {
+    const active = PROJECTS.filter(p=>p.team.includes(e.id)&&!['complete','cancelled'].includes(p.status)).map(p=>p.name).join('; ');
+    const done   = PROJECTS.filter(p=>p.team.includes(e.id)&&p.status==='complete').map(p=>p.name).join('; ');
+    return [e.name,e.email||'',e.office,e.eligible?'Yes':'No',e.standing||'',e.standingNote||'',
+      e.standingReviewedAt?new Date(e.standingReviewedAt).toLocaleDateString():'',active,done,e.currentGoal||'']
+      .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [headers.join(','),...rows].join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='team-audit.csv'; a.click();
+}
+
 </script>
 </body>
 </html>
