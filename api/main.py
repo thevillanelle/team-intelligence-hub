@@ -110,12 +110,6 @@ def _get_user(request: Request) -> Optional[dict]:
     Returns user dict {id, email} or None.
     Dev: set DEV_USER_ID + DEV_USER_EMAIL env vars.
     """
-    # Local dev bypass
-    dev_id    = os.environ.get("DEV_USER_ID")
-    dev_email = os.environ.get("DEV_USER_EMAIL")
-    if dev_id and dev_email:
-        return {"id": dev_id, "email": dev_email}
-
     auth = request.headers.get("authorization", "")
     if not auth.startswith("Bearer "):
         return None
