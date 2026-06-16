@@ -24,7 +24,7 @@ Sign in with Google to run it for your own team.
 |---|---|
 | Backend | Python 3.12 · FastAPI · Uvicorn |
 | Database | Supabase (PostgreSQL) |
-| Auth | Supabase Auth (Google OAuth + email/password) |
+| Auth | Supabase Auth (GitHub OAuth) |
 | Hosting | Vercel |
 | Observability | Structured JSON logging · `/api/metrics` endpoint |
 
@@ -74,7 +74,7 @@ GET  /api/audit/csv                       — Admin
 1. Create a new Supabase project
 2. Run `supabase_schema.sql` in the SQL editor
 3. Run `demo_seed.sql` to populate demo data
-4. Enable Google OAuth in Auth → Providers
+4. Enable GitHub OAuth in Auth → Providers → GitHub
 5. Copy your project URL and service role key
 
 ### 2. Local Development
