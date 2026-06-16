@@ -1,0 +1,2080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Team Intelligence Hub</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* ── API config ─────────────────────────────────────────────────────────── */
+// Set VITE_API_URL to your Vercel deployment URL in production.
+// In development, use localhost:8080.
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:8080'
+  : '';  // same-origin on Vercel
+
+// Supabase client — used only for auth (sign-in / sign-out / JWT)
+// Replace with your project URL and anon key.
+const SUPABASE_URL  = 'https://uqbrfoipakjmlxylwkhu.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_oqdvS0qTuHP5KDZ6jbNOrQ_76zfF8Xz';
+const _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Lato:wght@300;400;700&display=swap');
+:root {
+  --bg:#faf6f0; --surface:#ffffff; --surface2:#f5ede0; --border:#d9c5a8;
+  --accent:#a0621a; --accent-lt:#fdf0dc;
+  --text:#1e120a; --muted:#7a5c3e;
+  --green:#1a5c38; --green-lt:#d6f0e2;
+  --yellow:#8a5a00; --yellow-lt:#fff3cc;
+  --red:#7a1040; --red-lt:#fce4ee;
+  --purple:#4e1c72; --purple-lt:#ede0f8;
+  --teal:#0e5454; --teal-lt:#d0f0f0;
+  --orange:#8a3a10; --orange-lt:#fde8d8;
+  --radius:12px; --shadow:0 2px 12px rgba(0,0,0,.07); --shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --nav-h:60px; --font:'Lato',system-ui,sans-serif;
+}
+[data-theme="dark"] {
+  --bg:#140c08; --surface:#1f1108; --surface2:#2a1810; --border:#4a2e1a;
+  --accent:#c9973a; --accent-lt:#2d1f08;
+  --text:#f2e8d9; --muted:#9a7d62;
+  --green:#2d7a52; --green-lt:#0f2b1c;
+  --yellow:#d4a843; --yellow-lt:#2d2208;
+  --red:#8b2252; --red-lt:#2d0b1c;
+  --purple:#6b2d82; --purple-lt:#210d2a;
+  --teal:#1a6a6a; --teal-lt:#071f1f;
+  --orange:#b85c20; --orange-lt:#2a1508;
+  --shadow:0 2px 12px rgba(0,0,0,.5); --shadow-lg:0 8px 32px rgba(0,0,0,.7);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* DARK MODE transition */
+body,nav,.page,.project-card,.profile-card,.modal,.search-filters,.stat-pill,.loc-tab,.unassigned-section{transition:background .25s,border-color .25s,color .25s,box-shadow .25s}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:var(--nav-h);
+  background:rgba(255,255,255,.93);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:6px}
+[data-theme="dark"] nav{background:rgba(15,15,15,.93)}
+
+/* DARK MODE TOGGLE */
+.theme-btn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);
+  background:var(--surface2);cursor:pointer;font-size:16px;display:flex;align-items:center;
+  justify-content:center;transition:all .2s;flex-shrink:0}
+.theme-btn:hover{border-color:var(--accent);transform:scale(1.1)}
+
+/* ADMIN BADGE */
+.admin-badge{display:none;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;
+  background:linear-gradient(135deg,#7c3aed,#1d4ed8);color:#fff;font-size:12px;font-weight:700;
+  animation:pulse-badge 2s infinite}
+.admin-badge.visible{display:flex}
+@keyframes pulse-badge{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,.4)}50%{box-shadow:0 0 0 6px rgba(124,58,237,0)}}
+.admin-lock-btn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer;
+  display:none;transition:all .15s}
+.admin-lock-btn:hover{background:var(--red-lt);color:var(--red);border-color:var(--red)}
+.admin-lock-btn.visible{display:block}
+
+/* ADMIN MODAL — fix scroll cut-off on mobile */
+.admin-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+  z-index:300;display:none;align-items:flex-start;justify-content:center;
+  padding:20px;overflow-y:auto}
+.admin-modal-backdrop.open{display:flex}
+
+/* ADMIN TABS */
+.admin-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px}
+.admin-tab{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
+.admin-tab:hover:not(.active){border-color:var(--accent);color:var(--accent)}
+.admin-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.admin-modal{background:var(--surface);border-radius:16px;max-width:480px;width:100%;
+  box-shadow:var(--shadow-lg);padding:28px;position:relative;
+  border-top:4px solid var(--accent)}
+.admin-modal h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.admin-modal p{font-size:13px;color:var(--muted);margin-bottom:20px}
+.admin-section{margin-bottom:20px;border:1px solid var(--border);border-radius:10px;padding:14px}
+.admin-section h3{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)}
+.admin-row{display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+.admin-label{font-size:12px;font-weight:600;min-width:110px;color:var(--muted)}
+.admin-input,.admin-select{flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border);
+  font-size:13px;font-family:var(--font);outline:none;background:var(--bg);color:var(--text);min-width:120px}
+.admin-input:focus,.admin-select:focus{border-color:var(--accent)}
+.admin-btn{padding:7px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;
+  font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;transition:all .15s}
+.admin-btn:hover{opacity:.85}
+.admin-btn.danger{background:var(--red)}
+.admin-btn.success{background:var(--green)}
+.admin-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
+  border:none;background:var(--surface2);cursor:pointer;font-size:14px;display:flex;
+  align-items:center;justify-content:center;color:var(--muted)}
+.admin-close:hover{background:var(--border)}
+
+/* EDITABLE FIELDS (admin mode) */
+.admin-edit-overlay{display:none;position:absolute;top:6px;right:6px;z-index:10}
+.admin-mode .project-card{position:relative}
+.admin-mode .project-card:hover .admin-edit-overlay{display:block}
+.edit-pencil{width:28px;height:28px;border-radius:50%;border:none;background:var(--accent);
+  color:#fff;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow)}
+.admin-mode .profile-card{position:relative}
+.admin-mode-banner{display:none;background:linear-gradient(135deg,#7c3aed22,#1d4ed822);
+  border:1px solid var(--accent);border-radius:10px;padding:10px 16px;margin-bottom:16px;
+  font-size:13px;font-weight:600;color:var(--accent);text-align:center}
+.admin-mode-banner.visible{display:block}
+.nav-logo{font-weight:700;font-size:16px;letter-spacing:-.3px;margin-right:12px;white-space:nowrap}
+.nav-logo span{color:var(--accent)}
+.nav-btn{padding:6px 14px;border-radius:20px;border:none;cursor:pointer;font-size:13px;
+  font-weight:500;font-family:var(--font);background:transparent;color:var(--muted);transition:all .18s}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:var(--accent);color:#fff}
+.nav-spacer{flex:1}
+.nav-search-wrap{position:relative}
+.nav-search{padding:7px 12px 7px 32px;border-radius:20px;border:1px solid var(--border);
+  font-size:13px;font-family:var(--font);background:var(--surface2);width:200px;outline:none;transition:all .2s}
+.nav-search:focus{border-color:var(--accent);background:#fff;width:240px}
+.nav-si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+
+/* PAGES */
+.page{padding:calc(var(--nav-h) + 24px) 24px 60px;max-width:1320px;margin:0 auto;display:none}
+.page.active{display:block}
+.page-header{margin-bottom:22px}
+.page-header h1{font-size:26px;font-weight:700;letter-spacing:-.5px}
+.page-header p{color:var(--muted);font-size:14px;margin-top:3px}
+
+/* STATS ROW */
+.stats-row{display:none;flex-wrap:wrap;gap:10px;margin-bottom:22px}
+.admin-mode .stats-row{display:flex}
+.stat-pill{padding:10px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);
+  box-shadow:var(--shadow);font-size:13px;display:flex;align-items:center;gap:8px}
+.stat-pill-num{font-size:20px;font-weight:700}
+.stat-pill-lbl{color:var(--muted)}
+
+/* LOCATION TABS */
+.loc-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.loc-tab{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface);
+  color:var(--muted);cursor:pointer;font-size:13px;font-weight:500;font-family:var(--font);transition:all .15s}
+.loc-tab:hover{border-color:var(--accent);color:var(--accent)}
+.loc-tab.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CARDS GRID */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px}
+.cards-grid.wide{grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+
+/* PROJECT CARDS */
+.project-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);
+  padding:20px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column;gap:11px}
+.project-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.project-card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.project-title{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.project-contact{font-size:12px;color:var(--muted)}
+.project-contact a{color:var(--accent);text-decoration:none;font-weight:600;cursor:pointer}
+.project-contact a:hover{text-decoration:underline}
+.project-badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.badge-active{background:var(--green-lt);color:var(--green)}
+.badge-planning{background:var(--yellow-lt);color:var(--yellow)}
+.badge-wrap{background:var(--purple-lt);color:var(--purple)}
+.badge-complete{background:#e0f2fe;color:#0369a1}
+.badge-cancelled{background:#f3f4f6;color:#9ca3af}
+.project-objective{font-size:13px;color:var(--muted);line-height:1.5}
+.project-meta{display:flex;flex-direction:column;gap:5px}
+.meta-row{display:flex;gap:8px;align-items:baseline;font-size:13px}
+.meta-label{font-weight:600;min-width:86px;color:var(--text)}
+.meta-value{color:var(--muted)}
+.tools-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.tool-tag{font-size:11px;padding:2px 8px;border-radius:6px;background:var(--surface2);color:var(--muted)}
+.project-team{display:flex;flex-wrap:wrap;gap:6px}
+.team-chip{font-size:12px;font-weight:600;padding:4px 10px;border-radius:20px;background:var(--accent-lt);
+  color:var(--accent);cursor:pointer;border:none;font-family:var(--font);transition:all .15s}
+.team-chip:hover{background:var(--accent);color:#fff}
+.project-divider{border:none;border-top:1px solid var(--border)}
+.volunteer-row{font-size:12px;color:var(--muted)}
+.volunteer-row strong{color:var(--text)}
+.vol-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--accent);
+  color:var(--accent);background:transparent;cursor:pointer;font-family:var(--font);
+  font-weight:600;margin-top:4px;transition:all .15s;display:inline-block}
+.vol-btn:hover{background:var(--accent);color:#fff}
+.task-list{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+.task-item{font-size:12px;color:var(--muted);padding:3px 0;display:flex;align-items:flex-start;gap:5px}
+.task-item::before{content:"→";color:var(--accent);flex-shrink:0;margin-top:1px}
+
+/* PROFILE CARDS */
+.profile-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);
+  padding:20px;box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s;display:flex;flex-direction:column;gap:12px}
+.profile-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.profile-top{display:flex;align-items:center;gap:12px}
+.avatar{width:46px;height:46px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:17px;font-weight:700;color:#fff}
+.profile-name-row{flex:1}
+.profile-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.profile-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.avail-text{font-size:11px;margin-top:2px}
+
+/* Traffic Light */
+.traffic-light{width:30px;height:72px;background:#1e1e1e;border-radius:7px;display:flex;
+  flex-direction:column;align-items:center;justify-content:space-evenly;padding:5px;flex-shrink:0;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.5)}
+.tl-dot{width:16px;height:16px;border-radius:50%;opacity:.2;transition:opacity .3s,box-shadow .3s}
+.tl-dot.on{opacity:1}
+.tl-red{background:#ef4444}.tl-red.on{box-shadow:0 0 7px 2px #ef4444}
+.tl-yellow{background:#eab308}.tl-yellow.on{box-shadow:0 0 7px 2px #eab308}
+.tl-green{background:#22c55e}.tl-green.on{box-shadow:0 0 7px 2px #22c55e}
+.tl-label{font-size:10px;font-weight:600;text-align:center;color:var(--muted)}
+
+.locations-row{display:flex;flex-wrap:wrap;gap:5px;font-size:11px}
+.loc-chip{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;background:var(--surface2);color:var(--muted)}
+.loc-chip span{font-weight:600;color:var(--text)}
+.no-loc{font-size:11px;color:var(--border);font-style:italic}
+
+.skill-section{display:flex;flex-direction:column;gap:4px}
+.skill-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.skill-tags{display:flex;flex-wrap:wrap;gap:4px}
+.skill-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--accent-lt);color:var(--accent);font-weight:500}
+.skill-tag.nw{background:var(--purple-lt);color:var(--purple)}
+.skill-tag.hb{background:var(--green-lt);color:var(--green)}
+.skill-tag.empty-tag{background:var(--surface2);color:var(--border);font-style:italic}
+
+/* Office badge */
+.office-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block}
+.ob-metroburg{background:#dbeafe;color:#1d4ed8}
+.ob-lakeford{background:#dcfce7;color:#15803d}
+.ob-pinecrest{background:#ede9fe;color:#7c3aed}
+.ob-easthaven{background:#ffedd5;color:#ea580c}
+
+/* Private Notes */
+.notes-section{border-top:1px solid var(--border);padding-top:10px}
+.notes-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:12px;font-weight:600;
+  color:var(--muted);background:none;border:none;font-family:var(--font);padding:0;width:100%;text-align:left;transition:color .15s}
+.notes-toggle:hover{color:var(--text)}
+.notes-body{display:none;margin-top:8px}
+.notes-body.unlocked{display:block}
+.notes-pin-row{display:flex;gap:7px;margin-bottom:7px}
+.notes-pin-input{flex:1;padding:6px 10px;border-radius:7px;border:1px solid var(--border);font-size:12px;font-family:var(--font);outline:none}
+.notes-pin-input:focus{border-color:var(--accent)}
+.notes-pin-btn{padding:6px 12px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:12px;font-family:var(--font);font-weight:600;cursor:pointer}
+.notes-textarea{width:100%;padding:8px 10px;border-radius:7px;border:1px solid var(--border);font-size:12px;font-family:var(--font);resize:vertical;min-height:70px;background:#fffef5;outline:none}
+.notes-textarea:focus{border-color:var(--accent)}
+.notes-error{font-size:11px;color:var(--red);margin-top:3px}
+.notes-hint{font-size:10px;color:var(--muted);margin-top:3px}
+.save-note-btn{margin-top:6px;padding:5px 12px;border-radius:7px;border:none;background:var(--green);color:#fff;font-size:11px;font-family:var(--font);font-weight:600;cursor:pointer}
+.note-saved{font-size:11px;color:var(--green);margin-left:7px;display:none}
+
+/* SKILLS SEARCH */
+.search-filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px;background:var(--surface);
+  border-radius:var(--radius);border:1px solid var(--border);padding:18px;box-shadow:var(--shadow)}
+.filter-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:150px}
+.filter-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.filter-input,.filter-select{padding:7px 10px;border-radius:7px;border:1px solid var(--border);
+  font-size:13px;font-family:var(--font);outline:none;background:var(--bg)}
+.filter-input:focus,.filter-select:focus{border-color:var(--accent);background:#fff}
+.filter-btn{padding:7px 18px;border-radius:7px;border:none;background:var(--accent);color:#fff;
+  font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;align-self:flex-end}
+.clear-btn{padding:7px 18px;border-radius:7px;border:1px solid var(--border);background:transparent;
+  color:var(--muted);font-size:13px;font-family:var(--font);font-weight:600;cursor:pointer;align-self:flex-end}
+.results-count{font-size:13px;color:var(--muted);margin-bottom:14px}
+.results-count strong{color:var(--text)}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(4px);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--surface);border-radius:16px;max-width:560px;width:100%;max-height:90vh;
+  overflow-y:auto;box-shadow:var(--shadow-lg);padding:24px;position:relative}
+.modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;
+  border:none;background:var(--surface2);cursor:pointer;font-size:14px;display:flex;
+  align-items:center;justify-content:center;color:var(--muted)}
+.modal-close:hover{background:var(--border);color:var(--text)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);grid-column:1/-1}
+.empty-icon{font-size:40px;margin-bottom:10px}
+
+/* SUGGEST PROJECT BANNER */
+.suggest-banner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  background:linear-gradient(135deg,var(--accent-lt),var(--purple-lt));
+  border:1px solid var(--accent);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px}
+.suggest-banner-text{font-size:13px;font-weight:600;color:var(--accent)}
+.suggest-banner-sub{font-size:12px;color:var(--muted);font-weight:400;margin-top:2px}
+.suggest-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:22px;
+  background:var(--accent);color:#fff;text-decoration:none;font-size:13px;font-weight:700;
+  font-family:var(--font);border:none;cursor:pointer;transition:all .2s;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(29,78,216,.3)}
+.suggest-btn:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 4px 14px rgba(29,78,216,.4)}
+.suggest-btn-icon{font-size:16px}
+/* In admin mode, swap suggest banner for admin-only add project reminder */
+.admin-mode .suggest-banner{background:linear-gradient(135deg,var(--purple-lt),var(--accent-lt));border-color:var(--purple)}
+.admin-mode .suggest-banner .suggest-banner-text{color:var(--purple)}
+.admin-mode .suggest-banner .suggest-btn{background:var(--purple)}
+
+/* UNASSIGNED TASKS */
+.unassigned-section{background:var(--red-lt);border:1px solid #fca5a5;border-radius:var(--radius);padding:16px;margin-bottom:22px}
+.unassigned-section h3{font-size:14px;font-weight:700;color:var(--red);margin-bottom:10px}
+.unassigned-item{display:flex;justify-content:space-between;align-items:center;font-size:13px;
+  padding:7px 0;border-bottom:1px solid #fca5a5}
+.unassigned-item:last-child{border-bottom:none}
+.unassigned-name{font-weight:600}
+.claim-btn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--red);
+  color:var(--red);background:transparent;cursor:pointer;font-family:var(--font);font-weight:600;transition:all .15s}
+.claim-btn:hover{background:var(--red);color:#fff}
+
+/* CONNECTIONS PAGE */
+.conn-bubble{border:none;border-radius:30px;padding:6px 14px;cursor:pointer;font-family:var(--font);transition:all .2s;font-weight:500;line-height:1.4}
+.conn-bubble.nw{background:var(--purple-lt);color:var(--purple)}
+.conn-bubble.hb{background:var(--green-lt);color:var(--green)}
+.conn-bubble:hover,.conn-bubble.active{transform:scale(1.06);box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.conn-bubble.nw:hover,.conn-bubble.nw.active{background:var(--purple);color:#fff}
+.conn-bubble.hb:hover,.conn-bubble.hb.active{background:var(--green);color:#fff}
+.bubble-n{font-size:10px;background:rgba(255,255,255,.35);border-radius:10px;padding:1px 5px;margin-left:4px;font-weight:700}
+
+/* GUIDE PAGE */
+.guide-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-bottom:28px}
+.guide-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s}
+.guide-card:hover{box-shadow:var(--shadow-lg)}
+.guide-icon{font-size:38px;line-height:1}
+.guide-card h3{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.guide-card p{font-size:13px;color:var(--muted);line-height:1.65;margin:0}
+.guide-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.guide-pill{font-size:11px;padding:2px 9px;border-radius:20px;background:var(--surface2);color:var(--muted)}
+.guide-go-btn{margin-top:auto;padding:8px 18px;border-radius:20px;border:none;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;align-self:flex-start;color:#fff}
+.guide-go-btn:hover{opacity:.85;transform:translateY(-1px)}
+.guide-tips{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:22px;box-shadow:var(--shadow)}
+.guide-tips h3{font-size:16px;font-weight:700;margin-bottom:14px}
+.guide-tips-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.guide-tip{padding:12px 14px;border-radius:10px;background:var(--surface2);font-size:12px;line-height:1.55;color:var(--muted)}
+.guide-tip strong{color:var(--text);display:block;margin-bottom:3px}
+
+@media(max-width:640px){
+  .page{padding:calc(var(--nav-h)+14px) 14px 50px}
+  nav{padding:0 14px;gap:4px}
+  .nav-logo{font-size:13px}
+  .nav-btn{padding:5px 10px;font-size:12px}
+  .nav-search{width:130px}
+}
+
+.logo{font-family:'Playfair Display',Georgia,serif !important;font-style:italic;color:var(--accent)!important}
+h1,h2{font-family:'Playfair Display',Georgia,serif !important}
+</style>
+<script src="d3.min.js"></script>
+<script src="topojson.min.js"></script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Team Intelligence <span>Hub</span></div>
+  <button class="nav-btn active" onclick="showPage('projects')">📋 Projects</button>
+  <button class="nav-btn"        onclick="showPage('people')">👤 People</button>
+  <button class="nav-btn"        onclick="showPage('search')">🔍 Skills Search</button>
+  <button class="nav-btn"        onclick="showPage('connections')">🔗 Connections</button>
+  <button class="nav-btn"        onclick="showPage('guide')">👋 Guide</button>
+  <div class="nav-spacer"></div>
+  <span class="admin-badge" id="admin-badge">🔐 Admin Mode</span>
+  <button class="admin-lock-btn" id="admin-lock-btn" onclick="lockAdmin()">🔒 Lock Admin</button>
+  <button class="nav-btn" onclick="openAdminLogin()" id="admin-login-btn" title="Admin Login">⚙️</button>
+  <button class="theme-btn" onclick="toggleTheme()" id="theme-btn" title="Toggle dark/light mode">🌙</button>
+  <div class="nav-search-wrap">
+    <span class="nav-si">⌕</span>
+    <input class="nav-search" type="search" placeholder="Quick find…" oninput="quickFind(this.value)"/>
+  </div>
+</nav>
+
+<!-- PAGE: PROJECTS -->
+<div class="page active" id="page-projects">
+  <div class="page-header">
+    <h1>📋 Project Tracker</h1>
+    <p>All active projects, team assignments, and upcoming milestones.</p>
+  </div>
+
+  <!-- Suggest a Project banner — changes copy in admin mode -->
+  <div class="suggest-banner" id="suggest-banner">
+    <div>
+      <div class="suggest-banner-text" id="suggest-banner-text">💡 Got a project idea?</div>
+      <div class="suggest-banner-sub" id="suggest-banner-sub">Use the team workflow to pitch your idea — the team will review it!</div>
+    </div>
+    <a class="suggest-btn" id="suggest-btn"
+       href="#"
+       target="_blank" rel="noopener">
+      <span class="suggest-btn-icon">⚡</span> Suggest a Project
+    </a>
+  </div>
+  <div class="unassigned-section" id="unassigned-section">
+    <h3>⚠️ Unassigned but NEEDED Tasks</h3>
+    <div id="unassigned-list"></div>
+  </div>
+  <div class="stats-row" id="project-stats"></div>
+  <div class="cards-grid wide" id="projects-grid"></div>
+</div>
+
+<!-- PAGE: PEOPLE -->
+<div class="page" id="page-people">
+  <div class="page-header">
+    <h1>👤 Employee Profiles</h1>
+    <p>Team member profiles, competencies, and availability. Click any project chip to jump to the tracker.</p>
+  </div>
+  <div class="stats-row" id="people-stats"></div>
+  <div class="loc-tabs" id="people-tabs">
+    <button class="loc-tab active" onclick="filterPeopleTab('all',this)">🌐 All</button>
+    <button class="loc-tab" onclick="filterPeopleTab('Metroburg',this)">🤠 Metroburg</button>
+    <button class="loc-tab" onclick="filterPeopleTab('Lakeford',this)">🌲 Lakeford</button>
+    <button class="loc-tab" onclick="filterPeopleTab('Pinecrest',this)">🌟 Pinecrest</button>
+    <button class="loc-tab" onclick="filterPeopleTab('Easthaven',this)">🦁 Easthaven</button>
+  </div>
+  <div class="cards-grid" id="people-grid"></div>
+</div>
+
+<!-- PAGE: SKILLS SEARCH -->
+<div class="page" id="page-search">
+  <div class="page-header">
+    <h1>🔍 Skills Search</h1>
+    <p>Find team members by competency, location, hobby, or availability.</p>
+  </div>
+  <div class="search-filters">
+    <div class="filter-group">
+      <label class="filter-label">Name</label>
+      <input class="filter-input" id="f-name" type="text" placeholder="e.g. Sarah" oninput="runSearch()"/>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Work Competency</label>
+      <input class="filter-input" id="f-work" type="text" placeholder="e.g. Decision Quality" oninput="runSearch()"/>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Non-Work Skill</label>
+      <input class="filter-input" id="f-nonwork" type="text" placeholder="e.g. Photography" oninput="runSearch()"/>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Hobby</label>
+      <input class="filter-input" id="f-hobby" type="text" placeholder="e.g. Hiking" oninput="runSearch()"/>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Office</label>
+      <select class="filter-select" id="f-office" onchange="runSearch()">
+        <option value="">All Offices</option>
+        <option>Metroburg</option>
+        <option>Lakeford</option>
+        <option>Pinecrest</option>
+        <option>Easthaven</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label class="filter-label">Availability</label>
+      <select class="filter-select" id="f-avail" onchange="runSearch()">
+        <option value="">Any</option>
+        <option value="green">🟢 Available (0 projects)</option>
+        <option value="yellow">🟡 On 1 project</option>
+        <option value="red">🔴 Busy (2+ projects)</option>
+      </select>
+    </div>
+    <button class="clear-btn" onclick="clearSearch()">Clear</button>
+  </div>
+  <p class="results-count" id="search-count"></p>
+  <div class="cards-grid" id="search-results"></div>
+</div>
+
+<!-- PAGE: CONNECTIONS -->
+<div class="page" id="page-connections">
+  <div class="page-header">
+    <h1>🔗 Connections</h1>
+    <p>Explore what connects the team — shared interests, hobbies, and where everyone is from.</p>
+  </div>
+
+  <!-- Main tabs -->
+  <div class="loc-tabs" id="conn-main-tabs">
+    <button class="loc-tab active" onclick="switchConnMain('mindmap',this)">🧠 Mind Map</button>
+    <button class="loc-tab" onclick="switchConnMain('teammap',this)">🗺️ Team Map</button>
+  </div>
+
+  <!-- ── MIND MAP view ───────────── -->
+  <div id="conn-mindmap-view">
+    <div class="loc-tabs" id="conn-filter-tabs" style="margin-bottom:12px">
+      <button class="loc-tab active" onclick="filterMindMap('all',this)">✨ All Interests</button>
+      <button class="loc-tab" onclick="filterMindMap('nonwork',this)">🌟 Non-Work Expertise</button>
+      <button class="loc-tab" onclick="filterMindMap('hobbies',this)">🎨 Hobbies</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;font-size:12px;color:var(--muted);flex-wrap:wrap">
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--purple);vertical-align:middle;margin-right:4px"></span>Non-Work Expertise</span>
+      <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--green);vertical-align:middle;margin-right:4px"></span>Hobbies</span>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;margin-left:auto">
+        <input type="checkbox" id="mm-show-people" onchange="rerenderMindMap()" style="cursor:pointer"/> Show team members
+      </label>
+      <span style="font-size:11px">Click a node · Drag · Scroll to zoom</span>
+    </div>
+    <div id="mindmap-container" style="border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;height:520px">
+      <svg id="mindmap-svg" style="width:100%;height:100%"></svg>
+    </div>
+  </div>
+
+  <!-- ── TEAM MAP view ───────────── -->
+  <div id="conn-teammap-view" style="display:none">
+    <div id="conn-teammap-tabs" class="loc-tabs" style="margin-bottom:12px">
+      <button class="loc-tab active" onclick="setMapLayer('work',this)">💼 Work Offices</button>
+      <button class="loc-tab" onclick="setMapLayer('home',this)">🏠 Home Locations</button>
+      <button class="loc-tab" onclick="setMapLayer('roots',this)">🌱 Roots &amp; Origins</button>
+    </div>
+    <div id="geomap-container" style="border:1px solid var(--border);border-radius:12px;background:var(--surface);overflow:hidden;height:520px">
+      <svg id="geomap-svg" style="width:100%;height:100%"></svg>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px;color:var(--muted)">
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#1d4ed8;vertical-align:middle;margin-right:4px"></span>Metroburg</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#16a34a;vertical-align:middle;margin-right:4px"></span>Lakeford</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#7c3aed;vertical-align:middle;margin-right:4px"></span>Pinecrest</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#dc2626;vertical-align:middle;margin-right:4px"></span>Easthaven</span>
+      <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#9ca3af;vertical-align:middle;margin-right:4px"></span>Other</span>
+      <span style="margin-left:auto;font-size:11px">Dot size = number of people · <strong>Zoom in 3.5× to see every individual</strong> · Click a dot</span>
+    </div>
+  </div>
+
+  <!-- Shared results panel -->
+  <div id="connections-result" style="display:none;margin-top:24px;border-top:1px solid var(--border);padding-top:24px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 id="connections-result-title" style="font-size:18px;font-weight:700;letter-spacing:-.3px"></h2>
+      <button onclick="document.getElementById('connections-result').style.display='none'" style="border:none;background:var(--surface2);border-radius:20px;padding:5px 14px;cursor:pointer;font-size:12px;color:var(--muted);font-family:var(--font)">✕ Clear</button>
+    </div>
+    <div class="cards-grid" id="connections-result-cards"></div>
+  </div>
+</div>
+
+<!-- PAGE: GUIDE -->
+<div class="page" id="page-guide">
+  <div class="page-header">
+    <h1>👋 Welcome to the Skills Hub!</h1>
+    <p>Your team's one-stop spot for projects, people, and everything that connects us.</p>
+  </div>
+
+  <div class="guide-grid">
+
+    <div class="guide-card">
+      <div class="guide-icon">📋</div>
+      <h3>Projects</h3>
+      <p>See everything the team is working on — from compliance calibrations to hot sauce acquisitions. Track who's on what and where you can get involved.</p>
+      <div class="guide-pills">
+        <span class="guide-pill">🟢 Active</span>
+        <span class="guide-pill">🟡 Planning</span>
+        <span class="guide-pill">🔵 Complete</span>
+        <span class="guide-pill">⬜ Cancelled</span>
+      </div>
+      <p style="font-size:12px;margin-top:4px">See an open volunteer slot? Hit <strong>Sign Up</strong> — it'll open a pre-addressed email to the project lead. 📧</p>
+      <button class="guide-go-btn" style="background:var(--green)" onclick="showPage('projects')">See Projects →</button>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-icon">👤</div>
+      <h3>People</h3>
+      <p>Browse all 95+ team members across Metroburg, Lakeford, Pinecrest, and Easthaven. Every card has their skills, hobbies, locations, and current projects.</p>
+      <p style="font-size:12px;margin-top:2px">The <strong>traffic light</strong> shows availability right now:</p>
+      <div class="guide-pills">
+        <span class="guide-pill" style="background:var(--green-lt);color:var(--green)">🟢 Available</span>
+        <span class="guide-pill" style="background:var(--yellow-lt);color:var(--yellow)">🟡 On 1 project</span>
+        <span class="guide-pill" style="background:var(--red-lt);color:var(--red)">🔴 Busy (2+)</span>
+      </div>
+      <p style="font-size:12px;margin-top:4px">Click any name <strong>anywhere on the site</strong> and it jumps straight to their card. 🪄</p>
+      <button class="guide-go-btn" style="background:var(--accent)" onclick="showPage('people')">Meet the Team →</button>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-icon">🔍</div>
+      <h3>Skills Search</h3>
+      <p>Need someone who's good at Excel? Loves hiking? Speaks Mandarin? The entire team is searchable by skill, expertise, hobby, location, and availability.</p>
+      <p style="font-size:12px;margin-top:4px">Great for finding collaborators, subject matter experts, or just who else on the team is obsessed with the same thing you are. 😄</p>
+      <button class="guide-go-btn" style="background:var(--purple)" onclick="showPage('search')">Try Skills Search →</button>
+    </div>
+
+    <div class="guide-card">
+      <div class="guide-icon">🔗</div>
+      <h3>Connections</h3>
+      <p>Two ways to see what connects us:</p>
+      <p style="font-size:12px"><strong>🧠 Mind Map</strong> — every interest the team has, floating in a web. Bigger node = more people share it. Click any to see who's in that club.</p>
+      <p style="font-size:12px"><strong>🗺️ Team Map</strong> — where we work, where we live, and where we're all from. Switch between layers and <strong>zoom in</strong> to see every individual person's dot.</p>
+      <button class="guide-go-btn" style="background:var(--teal)" onclick="showPage('connections')">Explore Connections →</button>
+    </div>
+
+  </div>
+
+  <!-- Tips Section -->
+  <div class="guide-tips">
+    <h3>💡 Tips & Tricks</h3>
+    <div class="guide-tips-grid">
+      <div class="guide-tip"><strong>🔍 Quick find</strong>Use the search bar in the top nav to jump to any person or project by name — instantly.</div>
+      <div class="guide-tip"><strong>✉️ One-tap email</strong>Every profile card has a clickable email address. Just tap it to start a message.</div>
+      <div class="guide-tip"><strong>🌙 Dark mode</strong>That moon button top-right isn't decorative. Give it a click. You're welcome.</div>
+      <div class="guide-tip"><strong>💬 Update your profile</strong>Want to add or change something on your card? Drop your admin a message and they'll sync it.</div>
+      <div class="guide-tip"><strong>⚡ Suggest a project</strong>Have an idea? Hit the "Suggest a Project" button on the Projects page.</div>
+      <div class="guide-tip"><strong>🎯 Name click = profile</strong>Click anyone's name chip on a project card and it navigates straight to their profile. Try it!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN LOGIN MODAL -->
+<div class="admin-modal-backdrop" id="auth-modal" onclick="closeAuthModal(event)">
+  <div class="admin-modal">
+    <button class="admin-close" onclick="document.getElementById('auth-modal').classList.remove('open')">✕</button>
+    <h2>🔐 Sign In</h2>
+    <p>Sign in with your account to unlock admin editing capabilities.</p>
+    <div id="auth-login-view">
+      <div class="admin-row">
+        <span class="admin-label">Email</span>
+        <input class="admin-input" type="email" id="auth-email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')attemptSignIn()"/>
+      </div>
+      <div class="admin-row">
+        <span class="admin-label">Password</span>
+        <input class="admin-input" type="password" id="auth-password" placeholder="Password" onkeydown="if(event.key==='Enter')attemptSignIn()"/>
+      </div>
+      <div id="auth-error" style="font-size:12px;color:var(--red);margin:6px 0"></div>
+      <button class="admin-btn" onclick="attemptSignIn()" style="margin-top:8px">Sign In</button>
+      <p style="font-size:11px;color:var(--muted);margin-top:10px">Sign in to unlock project management, team assignments, and data editing.</p>
+    </div>
+    <div id="auth-panel-view" style="display:none">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 14px;border-radius:8px;background:var(--accent-lt)">
+        <span style="font-size:20px">🔐</span>
+        <span style="font-size:13px;font-weight:700;color:var(--accent)">Admin Mode Active</span>
+      </div>
+
+      <!-- TABS -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="tools" onclick="switchAdminTab('tools')">⚙️ Admin Tools</button>
+        <button class="admin-tab" data-tab="howto" onclick="switchAdminTab('howto')">❓ How It Works</button>
+      </div>
+
+      <!-- ── TAB: TOOLS ── -->
+      <div id="admin-tools-content">
+
+        <!-- team wiki LINKS -->
+        <div class="admin-section" style="border-color:var(--accent)">
+          <h3>🗂️ Edit Data in team wiki</h3>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+            <a href="https://wiki.vilecorp.com" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--accent-lt);border:1px solid var(--accent);text-decoration:none;color:var(--accent);font-weight:700;font-size:13px">
+              <span style="font-size:22px">📋</span>
+              <div><div>Edit Projects &amp; Team Assignments</div><div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:1px">Add/edit projects, change statuses, assign/remove team members</div></div>
+            </a>
+            <a href="https://wiki.vilecorp.com" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:10px;background:var(--green-lt);border:1px solid var(--green);text-decoration:none;color:var(--green);font-weight:700;font-size:13px">
+              <span style="font-size:22px">👤</span>
+              <div><div>Edit Team Skills Directory</div><div style="font-size:11px;font-weight:400;color:var(--muted);margin-top:1px">Update any team member's locations, competencies, or hobbies</div></div>
+            </a>
+          </div>
+          <p style="font-size:11px;color:var(--muted);line-height:1.6">After making changes in team wiki, use one of the options in the <strong>How It Works</strong> tab to push them live. ↑</p>
+          <div id="gh-status" style="font-size:12px;margin-top:8px;min-height:14px"></div>
+        </div>
+
+        <!-- SEND UPDATE EMAIL -->
+        <div class="admin-section">
+          <h3>📧 Email Changes to Admin</h3>
+          <button class="admin-btn" onclick="exportHubData()" style="width:100%;justify-content:center;display:flex;align-items:center;gap:8px;font-size:14px;padding:10px">
+            <span>📧</span> Copy Data &amp; Email Admin
+          </button>
+          <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6">Copies the current data to your clipboard and opens a pre-addressed email. Send it and your admin will sync the site.</p>
+          <div id="export-status" style="font-size:12px;margin-top:6px;min-height:14px"></div>
+        </div>
+
+        <!-- REASSIGN -->
+        <div class="admin-section">
+          <h3>👥 Reassign Team Member to Project</h3>
+          <div class="admin-row">
+            <span class="admin-label">Team Member</span>
+            <select class="admin-select" id="a-emp"></select>
+          </div>
+          <div class="admin-row">
+            <span class="admin-label">Project</span>
+            <select class="admin-select" id="a-proj"></select>
+          </div>
+          <div class="admin-row">
+            <span class="admin-label">Action</span>
+            <select class="admin-select" id="a-action">
+              <option value="add">➕ Add to project</option>
+              <option value="remove">➖ Remove from project</option>
+            </select>
+          </div>
+          <button class="admin-btn" onclick="adminReassign()">Apply Change</button>
+          <div id="reassign-msg" style="font-size:12px;margin-top:6px"></div>
+        </div>
+
+        <!-- UPDATE STATUS -->
+        <div class="admin-section">
+          <h3>📋 Update Project Status</h3>
+          <div class="admin-row">
+            <span class="admin-label">Project</span>
+            <select class="admin-select" id="a-status-proj"></select>
+          </div>
+          <div class="admin-row">
+            <span class="admin-label">New Status</span>
+            <select class="admin-select" id="a-status-val">
+              <option value="active">🟢 Active</option>
+              <option value="planning">🟡 Planning</option>
+              <option value="wrap">🟣 Wrap-up</option>
+              <option value="complete">🔵 Complete</option>
+              <option value="cancelled">⬜ Cancelled</option>
+            </select>
+          </div>
+          <button class="admin-btn success" onclick="adminUpdateStatus()">Update Status</button>
+          <div id="status-msg" style="font-size:12px;margin-top:6px"></div>
+        </div>
+
+        <!-- ADD PROJECT -->
+        <div class="admin-section">
+          <h3>➕ Add New Project</h3>
+          <div class="admin-row">
+            <span class="admin-label">Project Name</span>
+            <input class="admin-input" id="a-new-name" placeholder="Project name…"/>
+          </div>
+          <div class="admin-row">
+            <span class="admin-label">Lead / Contact</span>
+            <select class="admin-select" id="a-new-lead"></select>
+          </div>
+          <div class="admin-row">
+            <span class="admin-label">Objective</span>
+            <input class="admin-input" id="a-new-obj" placeholder="Project objective…"/>
+          </div>
+          <button class="admin-btn success" onclick="adminAddProject()">Create Project</button>
+          <div id="new-proj-msg" style="font-size:12px;margin-top:6px"></div>
+        </div>
+
+        <!-- REMOVE PROJECT -->
+        <div class="admin-section">
+          <h3>🗑️ Remove Project</h3>
+          <div class="admin-row">
+            <span class="admin-label">Project</span>
+            <select class="admin-select" id="a-del-proj"></select>
+          </div>
+          <button class="admin-btn danger" onclick="adminDeleteProject()">Remove Project</button>
+          <div id="del-proj-msg" style="font-size:12px;margin-top:6px"></div>
+        </div>
+
+      </div><!-- end admin-tools-content -->
+
+      <!-- ── TAB: HOW IT WORKS ── -->
+      <div id="admin-howto-content" style="display:none">
+
+        <div class="admin-section" style="border-color:var(--accent)">
+          <h3>✉️ Option A — Email your Admin <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--green-lt);color:var(--green);font-weight:700;margin-left:6px">EASIEST</span></h3>
+          <div style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:10px">
+            <strong style="color:var(--text)">Step 1.</strong> Make your changes — edit the team wiki docs above or use the admin tools.<br/>
+            <strong style="color:var(--text)">Step 2.</strong> Click <strong>"Email Changes to Admin"</strong> in the Tools tab.<br/>
+            <strong style="color:var(--text)">Step 3.</strong> Your Mail app opens — pre-addressed, subject pre-filled. Hit send.<br/>
+            <strong style="color:var(--text)">Step 4.</strong> Your admin opens AI assistant and the site updates in ~60 seconds. Done!
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--green-lt);font-size:11px;color:var(--green);font-weight:600">✅ No technical setup needed. Works for everyone.</div>
+        </div>
+
+        <div class="admin-section">
+          <h3>☁️ Option B — Push via AI assistant <span style="font-size:10px;padding:2px 8px;border-radius:20px;background:var(--accent-lt);color:var(--accent);font-weight:700;margin-left:6px">INSTANT</span></h3>
+          <div style="font-size:12px;color:var(--muted);line-height:1.9;margin-bottom:10px">
+            <strong style="color:var(--text)">Step 1.</strong> Make your changes in the team wiki docs or using the admin tools.<br/>
+            <strong style="color:var(--text)">Step 2.</strong> Open <strong>AI assistant</strong> on your Mac.<br/>
+            <strong style="color:var(--text)">Step 3.</strong> Type: <em style="background:var(--surface2);padding:2px 6px;border-radius:4px">"sync the Skills Hub"</em><br/>
+            <strong style="color:var(--text)">Step 4.</strong> AI assistant pushes changes to GitHub. Site updates in ~60 seconds. No waiting on anyone!
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--surface2);font-size:11px;color:var(--muted);line-height:1.6">
+            <strong>Requires:</strong> GitHub MCP + team wiki MCP servers enabled in AI assistant Settings → MCP.<br/>
+            Contact <strong>your admin</strong> if you need help getting those set up.
+          </div>
+        </div>
+
+      </div><!-- end admin-howto-content -->
+
+      <button class="admin-btn danger" onclick="lockAdmin()" style="width:100%;margin-top:4px">🔒 Lock &amp; Exit Admin Mode</button>
+    </div>
+</div>
+
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════
+   AVATAR COLOR HELPERS
+═══════════════════════════════════════════════════ */
+const OFFICE_PALETTES = {
+  "Metroburg":     ["#1d4ed8","#0891b2","#0d9488","#1e40af","#0369a1","#0e7490"],
+  "Lakeford":  ["#15803d","#16a34a","#166534","#047857","#065f46","#14532d"],
+  "Pinecrest":    ["#7c3aed","#6d28d9","#5b21b6","#9333ea","#7e22ce","#4c1d95"],
+  "Easthaven":  ["#dc2626","#b91c1c","#c2410c","#be123c","#e11d48","#9f1239"]
+};
+function avatarColor(name, office) {
+  const pal = OFFICE_PALETTES[office] || OFFICE_PALETTES["Metroburg"];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0x7fffffff;
+  return pal[h % pal.length];
+}
+function initials(name) {
+  const p = name.trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+}
+
+/* ═══════════════════════════════════════════════════
+   EMPLOYEE DATA  (93 team members)
+═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   DATA — populated from API on load
+═══════════════════════════════════════════════════ */
+let EMPLOYEES = [];
+let PROJECTS  = [];
+const UNASSIGNED_TASKS = [];
+
+/* ═══════════════════════════════════════════════════
+   AVAILABILITY LOGIC
+═══════════════════════════════════════════════════ */
+function getProjectCount(id){
+  return PROJECTS.filter(p=>p.team.includes(id)&&!["complete","cancelled"].includes(p.status)).length
+}
+function getAvailability(id){
+  const n=getProjectCount(id);
+  return n===0?"green":n===1?"yellow":"red";
+}
+function tlLabel(a){return a==="green"?"Available":a==="yellow"?"1 Project":"Busy"}
+
+/* ═══════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════ */
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  const idx={projects:0,people:1,search:2,connections:3,guide:4}[id];
+  document.querySelectorAll(".nav-btn")[idx].classList.add("active");
+  if(id==="projects")    renderProjects();
+  if(id==="people")      renderPeopleTab("all");
+  if(id==="search")      runSearch();
+  if(id==="connections") renderConnectionsPage();
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER: PROJECTS
+═══════════════════════════════════════════════════ */
+function renderProjects(){
+  // Unassigned tasks — admin mode only
+  const us=document.getElementById("unassigned-section");
+  if(!isAdminMode || UNASSIGNED_TASKS.length===0){
+    us.style.display="none";
+  } else {
+    us.style.display="block";
+    const ul=document.getElementById("unassigned-list");
+    ul.innerHTML=UNASSIGNED_TASKS.map(u=>`
+      <div class="unassigned-item">
+        <span><span class="unassigned-name">${u.task}</span> <span style="color:var(--muted);font-size:11px">– ${u.project}</span></span>
+        <button class="claim-btn" onclick="alert('Thanks for your interest! Contact the project lead to claim this task.')">Claim</button>
+      </div>`).join("");
+  }
+
+  // Sort: active → planning → wrap → complete → cancelled
+  const sortOrder={active:0,planning:1,wrap:2,complete:3,cancelled:4};
+  const sorted=[...PROJECTS].sort((a,b)=>(sortOrder[a.status]??5)-(sortOrder[b.status]??5));
+
+  const active=sorted.filter(p=>p.status==="active").length;
+  const planning=sorted.filter(p=>p.status==="planning").length;
+  const wrap=sorted.filter(p=>p.status==="wrap").length;
+  const complete=sorted.filter(p=>p.status==="complete").length;
+  const cancelled=sorted.filter(p=>p.status==="cancelled").length;
+  document.getElementById("project-stats").innerHTML=`
+    <div class="stat-pill"><span class="stat-pill-num">${PROJECTS.length}</span><span class="stat-pill-lbl">Total Projects</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--green)">${active}</span><span class="stat-pill-lbl">Active</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--yellow)">${planning}</span><span class="stat-pill-lbl">Planning</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:#0369a1">${complete}</span><span class="stat-pill-lbl">Complete</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--muted)">${cancelled}</span><span class="stat-pill-lbl">Cancelled</span></div>
+    <div class="stat-pill"><span class="stat-pill-num">${EMPLOYEES.length}</span><span class="stat-pill-lbl">Team Members</span></div>`;
+
+  document.getElementById("projects-grid").innerHTML=sorted.map(p=>{
+    const contact=EMPLOYEES.find(e=>e.id===p.contact);
+    const bc = p.status==="active"?"badge-active":
+               p.status==="planning"?"badge-planning":
+               p.status==="wrap"?"badge-wrap":
+               p.status==="complete"?"badge-complete":
+               "badge-cancelled";
+    const bl = p.status==="active"?"Active":
+               p.status==="planning"?"Planning":
+               p.status==="wrap"?"Wrap-up":
+               p.status==="complete"?"Complete ✓":
+               "Cancelled";
+    const chips=p.team.map(tid=>{
+      const emp=EMPLOYEES.find(e=>e.id===tid);
+      const av=getAvailability(tid);
+      const dot=av==="green"?"🟢":av==="yellow"?"🟡":"🔴";
+      const role=p.roles?.[tid]?` <span style="font-size:10px;opacity:.7">(${p.roles[tid]})</span>`:"";
+      return`<button class="team-chip" onclick="goToProfile('${tid}')">${dot} ${emp?emp.name:tid}${role}</button>`;
+    }).join("");
+    const tools=p.tools.length?p.tools.map(t=>`<span class="tool-tag">${t}</span>`).join(""):"";
+    const tasks=p.tasks.map(t=>`<div class="task-item">${t}</div>`).join("");
+    const endStr=p.endDate?new Date(p.endDate).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}):"TBD";
+    const slots=p.volunteers.slots-p.volunteers.filled;
+    return`<div class="project-card" id="proj-${p.id}">
+      <div class="project-card-header">
+        <div>
+          <div class="project-title">${p.name}</div>
+          <div class="project-contact">Lead: <a onclick="goToProfile('${p.contact}')" style="cursor:pointer">${contact?contact.name:"—"}</a></div>
+        </div>
+        <span class="project-badge ${bc}">${bl}</span>
+      </div>
+      <p class="project-objective">${p.objective}</p>
+      <div class="project-meta">
+        <div class="meta-row"><span class="meta-label">📅 End Date</span><span class="meta-value">${endStr}</span></div>
+        ${tools?`<div class="meta-row"><span class="meta-label">🛠️ Tools</span><span class="meta-value">${p.tools.join(", ")}</span></div>`:""}
+      </div>
+      <div>
+        <div class="skill-section-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Next Tasks</div>
+        <div class="task-list">${tasks}</div>
+      </div>
+      <hr class="project-divider"/>
+      <div>
+        <div class="skill-section-label" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px">Team (click for profile)</div>
+        <div class="project-team">${chips}</div>
+      </div>
+      <div class="volunteer-row">
+        ${p.volunteers.need?`<strong>🙋 Volunteers:</strong> ${p.volunteers.need}<br/>`:""}
+        ${slots>0?(contact?.email
+          ?`<a class="vol-btn" href="mailto:${contact.email}?subject=${encodeURIComponent("Volunteer Interest: "+p.name)}&body=${encodeURIComponent("Hi "+contact.name+",\n\nI'm interested in volunteering for \""+p.name+"\".\n\nPlease let me know how I can help!\n\n[Your name]")}">Sign Up</a>`
+          :`<button class="vol-btn" onclick="alert('Contact ${contact?contact.name:'the lead'} to sign up!')">Sign Up →</button>`)
+        :p.volunteers.need?'<span style="color:var(--muted);font-size:11px">All slots filled ✓</span>':""}
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ═══════════════════════════════════════════════════
+   RENDER: PEOPLE + LOCATION TABS
+═══════════════════════════════════════════════════ */
+function filterPeopleTab(office, btn){
+  document.querySelectorAll(".loc-tab").forEach(t=>t.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  renderPeopleTab(office);
+}
+
+function renderPeopleTab(office){
+  const list = office==="all" ? EMPLOYEES : EMPLOYEES.filter(e=>e.office===office);
+  // Stats
+  const green=list.filter(e=>getAvailability(e.id)==="green").length;
+  const yellow=list.filter(e=>getAvailability(e.id)==="yellow").length;
+  const red=list.filter(e=>getAvailability(e.id)==="red").length;
+  document.getElementById("people-stats").innerHTML=`
+    <div class="stat-pill"><span class="stat-pill-num">${list.length}</span><span class="stat-pill-lbl">Shown</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--green)">${green}</span><span class="stat-pill-lbl">🟢 Available</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--yellow)">${yellow}</span><span class="stat-pill-lbl">🟡 1 Project</span></div>
+    <div class="stat-pill"><span class="stat-pill-num" style="color:var(--red)">${red}</span><span class="stat-pill-lbl">🔴 Busy</span></div>`;
+  renderCards(list, "people-grid");
+}
+
+/* ═══════════════════════════════════════════════════
+   BUILD PROFILE CARD HTML
+═══════════════════════════════════════════════════ */
+function buildProfileCard(e){
+  const avail=getAvailability(e.id);
+  const n=getProjectCount(e.id);
+  const projs=PROJECTS.filter(p=>p.team.includes(e.id));
+  const activeProjs=projs.filter(p=>!["complete","cancelled"].includes(p.status));
+  const completedProjs=projs.filter(p=>p.status==="complete");
+  const color=avatarColor(e.name,e.office);
+  const initl=initials(e.name);
+  const obCls={"Metroburg":"ob-metroburg","Lakeford":"ob-lakeford","Pinecrest":"ob-pinecrest","Easthaven":"ob-easthaven"}[e.office]||"ob-metroburg";
+  const saved=localStorage.getItem("note_"+e.id)||e.note||"";
+
+  const wt=e.workSkills.length?e.workSkills.map(s=>`<span class="skill-tag">${s}</span>`).join(""):`<span class="skill-tag empty-tag">Not listed yet</span>`;
+  const nw=e.nonWorkSkills.length?e.nonWorkSkills.map(s=>`<span class="skill-tag nw">${s}</span>`).join(""):`<span class="skill-tag empty-tag">Not listed yet</span>`;
+  const hb=e.hobbies.length?e.hobbies.map(h=>`<span class="skill-tag hb">${h}</span>`).join(""):`<span class="skill-tag empty-tag">Not listed yet</span>`;
+
+  const locs = [
+    e.locations.home?`<div class="loc-chip">🏠 Home: <span>${e.locations.home}</span></div>`:"",
+    e.locations.work?`<div class="loc-chip">💼 Work: <span>${e.locations.work}</span></div>`:"",
+    e.locations.childhood?`<div class="loc-chip">🌱 Roots: <span>${e.locations.childhood}</span></div>`:""
+  ].filter(Boolean).join("");
+
+  const projChips=activeProjs.map(p=>`<button class="team-chip" onclick="showPage('projects');setTimeout(()=>highlightProject('${p.id}'),250)">${p.name}</button>`).join("");
+  const doneChips=completedProjs.map(p=>`<button class="team-chip" style="background:var(--surface2);color:var(--muted)" onclick="showPage('projects');setTimeout(()=>highlightProject('${p.id}'),250)">✓ ${p.name}</button>`).join("");
+
+  return`<div class="profile-card" id="card-${e.id}">
+    <div class="profile-top">
+      <div class="avatar" style="background:${color}">${initl}</div>
+      <div class="profile-name-row">
+        <div class="profile-name">${e.name}</div>
+        <div class="profile-sub">
+          <span class="office-badge ${obCls}">${e.office}</span>
+          ${e.email?`<a href="mailto:${e.email}" style="font-size:11px;color:var(--accent);text-decoration:none;margin-left:6px">✉️ ${e.email}</a>`:""}
+        </div>
+        <div class="avail-text" style="color:${avail==="green"?"var(--green)":avail==="yellow"?"var(--yellow)":"var(--red)"}">
+          ● ${tlLabel(avail)} · ${n} project${n!==1?"s":""}
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div class="traffic-light">
+          <div class="tl-dot tl-red    ${avail==="red"    ?"on":""}"></div>
+          <div class="tl-dot tl-yellow ${avail==="yellow" ?"on":""}"></div>
+          <div class="tl-dot tl-green  ${avail==="green"  ?"on":""}"></div>
+        </div>
+        <span class="tl-label">${tlLabel(avail)}</span>
+      </div>
+    </div>
+    ${locs?`<div class="locations-row">${locs}</div>`:`<div class="no-loc">Location details not added yet</div>`}
+    <div class="skill-section"><div class="skill-section-label">💼 Work Competencies</div><div class="skill-tags">${wt}</div></div>
+    <div class="skill-section"><div class="skill-section-label">🌟 Non-Work Expertise</div><div class="skill-tags">${nw}</div></div>
+    <div class="skill-section"><div class="skill-section-label">🎨 Favorite Hobbies</div><div class="skill-tags">${hb}</div></div>
+    ${projChips?`<div class="skill-section"><div class="skill-section-label">📋 Active Projects</div><div class="skill-tags">${projChips}</div></div>`:""}
+    ${doneChips?`<div class="skill-section"><div class="skill-section-label">✅ Completed Projects</div><div class="skill-tags">${doneChips}</div></div>`:""}
+    <div class="notes-section">
+      <button class="notes-toggle" onclick="toggleNotes('${e.id}')">
+        🔒 Private Notes <span style="font-size:10px;font-weight:400;margin-left:auto;color:var(--border)">PIN required</span>
+      </button>
+      <div class="notes-body" id="notes-body-${e.id}">
+        <div id="notes-pin-row-${e.id}" class="notes-pin-row">
+          <input class="notes-pin-input" type="password" placeholder="Enter PIN…" id="notes-pin-${e.id}" onkeydown="if(event.key==='Enter')unlockNotes('${e.id}')"/>
+          <button class="notes-pin-btn" onclick="unlockNotes('${e.id}')">Unlock</button>
+        </div>
+        <div id="notes-err-${e.id}" class="notes-error"></div>
+        <div id="notes-ed-${e.id}" style="display:none">
+          <textarea class="notes-textarea" id="notes-txt-${e.id}" placeholder="Internal notes — visible to authorized users only…">${saved}</textarea>
+          <div style="display:flex;align-items:center">
+            <button class="save-note-btn" onclick="saveNote('${e.id}')">Save</button>
+            <span class="note-saved" id="note-saved-${e.id}">✓ Saved</span>
+          </div>
+          <p class="notes-hint">Saved locally. Connect to a secure backend for production use.</p>
+        </div>
+      </div>
+    </div>
+    ${isAdminMode
+      ? `<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;display:flex;gap:6px;flex-wrap:wrap">
+           <a href="${QUIP_SKILLS_URL}" target="_blank" class="skill-tag hb" style="text-decoration:none;cursor:pointer">✏️ Edit Skills in team wiki</a>
+         </div>`
+      : `<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px;font-size:11px;color:var(--muted);text-align:center">
+           💬 Need to update this profile? <strong>Contact your team lead.</strong>
+         </div>`
+    }
+  </div>`;
+}
+
+function renderCards(list, targetId){
+  const grid=document.getElementById(targetId);
+  if(!list.length){
+    grid.innerHTML=`<div class="empty-state"><div class="empty-icon">🔎</div><p>No team members match your filters.</p></div>`;
+    return;
+  }
+  grid.innerHTML=list.map(e=>buildProfileCard(e)).join("");
+}
+
+/* ═══════════════════════════════════════════════════
+   PRIVATE NOTES
+═══════════════════════════════════════════════════ */
+function toggleNotes(id){
+  const body=document.getElementById("notes-body-"+id);
+  body.classList.toggle("unlocked");
+  if(!body.classList.contains("unlocked")){
+    document.getElementById("notes-ed-"+id).style.display="none";
+    document.getElementById("notes-pin-row-"+id).style.display="flex";
+    document.getElementById("notes-err-"+id).textContent="";
+    document.getElementById("notes-pin-"+id).value="";
+  }
+}
+function unlockNotes(id){
+  const pin=document.getElementById("notes-pin-"+id).value;
+  if(pin===PIN){
+    document.getElementById("notes-pin-row-"+id).style.display="none";
+    document.getElementById("notes-err-"+id).textContent="";
+    document.getElementById("notes-ed-"+id).style.display="block";
+    const s=localStorage.getItem("note_"+id);
+    if(s!==null) document.getElementById("notes-txt-"+id).value=s;
+  } else {
+    document.getElementById("notes-err-"+id).textContent="Incorrect PIN. Hint: it's 4 digits.";
+  }
+}
+function saveNote(id){
+  localStorage.setItem("note_"+id,document.getElementById("notes-txt-"+id).value);
+  const lbl=document.getElementById("note-saved-"+id);
+  lbl.style.display="inline";
+  setTimeout(()=>lbl.style.display="none",2000);
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL (profile pop-up from project view)
+═══════════════════════════════════════════════════ */
+function openModal(empId){
+  const e=EMPLOYEES.find(x=>x.id===empId);
+  if(!e)return;
+  document.getElementById("modal-body").innerHTML=buildProfileCard(e);
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal(ev){if(ev.target.id==="modal")closeModalBtn()}
+function closeModalBtn(){document.getElementById("modal").classList.remove("open")}
+
+/* ═══════════════════════════════════════════════════
+   PROJECT HIGHLIGHT
+═══════════════════════════════════════════════════ */
+function highlightProject(pid){
+  const el=document.getElementById("proj-"+pid);
+  if(el){
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.style.outline="3px solid var(--accent)";
+    el.style.outlineOffset="3px";
+    setTimeout(()=>{el.style.outline="";el.style.outlineOffset="";},2000);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   SKILLS SEARCH
+═══════════════════════════════════════════════════ */
+function runSearch(){
+  const name    =(document.getElementById("f-name").value||"").trim().toLowerCase();
+  const work    =(document.getElementById("f-work").value||"").trim().toLowerCase();
+  const nonwork =(document.getElementById("f-nonwork").value||"").trim().toLowerCase();
+  const hobby   =(document.getElementById("f-hobby").value||"").trim().toLowerCase();
+  const office  = document.getElementById("f-office").value;
+  const avail   = document.getElementById("f-avail").value;
+
+  const results=EMPLOYEES.filter(e=>{
+    if(name    && !e.name.toLowerCase().includes(name)) return false;
+    if(work    && !e.workSkills.some(s=>s.toLowerCase().includes(work))) return false;
+    if(nonwork && !e.nonWorkSkills.some(s=>s.toLowerCase().includes(nonwork))) return false;
+    if(hobby   && !e.hobbies.some(h=>h.toLowerCase().includes(hobby))) return false;
+    if(office  && e.office!==office) return false;
+    if(avail   && getAvailability(e.id)!==avail) return false;
+    return true;
+  });
+  document.getElementById("search-count").innerHTML=
+    `Showing <strong>${results.length}</strong> of <strong>${EMPLOYEES.length}</strong> team members`;
+  renderCards(results,"search-results");
+}
+function clearSearch(){
+  ["f-name","f-work","f-nonwork","f-hobby"].forEach(id=>{document.getElementById(id).value=""});
+  document.getElementById("f-office").value="";
+  document.getElementById("f-avail").value="";
+  runSearch();
+}
+
+/* ═══════════════════════════════════════════════════
+   GO TO PROFILE — navigate to person's card in Skills Search
+═══════════════════════════════════════════════════ */
+function goToProfile(empId){
+  const e=EMPLOYEES.find(x=>x.id===empId);
+  if(!e) return;
+  showPage("search");
+  document.getElementById("f-name").value=e.name;
+  ["f-work","f-nonwork","f-hobby"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("f-office").value="";
+  document.getElementById("f-avail").value="";
+  runSearch();
+  setTimeout(()=>{
+    const card=document.getElementById("card-"+empId);
+    if(card) card.scrollIntoView({behavior:"smooth",block:"center"});
+  },150);
+}
+
+/* ═══════════════════════════════════════════════════
+   QUICK FIND (nav bar)
+═══════════════════════════════════════════════════ */
+function quickFind(q){
+  if(!q.trim())return;
+  const ql=q.toLowerCase();
+  const person=EMPLOYEES.find(e=>e.name.toLowerCase().includes(ql));
+  if(person){goToProfile(person.id);return}
+  const proj=PROJECTS.find(p=>p.name.toLowerCase().includes(ql));
+  if(proj){showPage("projects");setTimeout(()=>highlightProject(proj.id),300)}
+}
+
+/* ═══════════════════════════════════════════════════
+   DARK / LIGHT MODE
+═══════════════════════════════════════════════════ */
+function toggleTheme(){
+  const isDark = document.documentElement.getAttribute("data-theme")==="dark";
+  document.documentElement.setAttribute("data-theme", isDark?"light":"dark");
+  document.getElementById("theme-btn").textContent = isDark?"🌙":"☀️";
+  localStorage.setItem("theme", isDark?"light":"dark");
+}
+// Restore saved theme
+(function(){
+  const saved=localStorage.getItem("theme");
+  if(saved==="dark"){
+    document.documentElement.setAttribute("data-theme","dark");
+    document.addEventListener("DOMContentLoaded",()=>{
+      const btn=document.getElementById("theme-btn");
+      if(btn) btn.textContent="☀️";
+    });
+  }
+})();
+
+/* ═══════════════════════════════════════════════════
+   AUTH — Supabase email/password
+   isAdminMode = true when user is authenticated as
+   the org owner (admin).
+═══════════════════════════════════════════════════ */
+let isAdminMode = false;
+let _jwt        = null;   // Bearer token for API calls
+let _currentUser = null;
+
+/* ── API helpers ─────────────────────────────────── */
+async function apiGet(path) {
+  const headers = _jwt ? { 'Authorization': `Bearer ${_jwt}` } : {};
+  const res = await fetch(API_BASE + path, { headers });
+  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+  return res.json();
+}
+async function apiPost(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt}` },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || res.status); }
+  return res.json();
+}
+async function apiPatch(path, body) {
+  const res = await fetch(API_BASE + path, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${_jwt}` },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || res.status); }
+  return res.json();
+}
+async function apiDelete(path) {
+  const res = await fetch(API_BASE + path, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${_jwt}` }
+  });
+  if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || res.status); }
+}
+
+/* ── Sign-in / sign-out ──────────────────────────── */
+function openAdminLogin() {
+  if (isAdminMode) {
+    document.getElementById('auth-modal').classList.add('open');
+    document.getElementById('auth-login-view').style.display = 'none';
+    document.getElementById('auth-panel-view').style.display = 'block';
+    populateAdminSelects();
+  } else {
+    document.getElementById('auth-modal').classList.add('open');
+    document.getElementById('auth-login-view').style.display = 'block';
+    document.getElementById('auth-panel-view').style.display = 'none';
+    document.getElementById('auth-error').textContent = '';
+    setTimeout(() => document.getElementById('auth-email').focus(), 100);
+  }
+}
+
+function closeAuthModal(ev) {
+  if (!ev || ev.target.id === 'auth-modal')
+    document.getElementById('auth-modal').classList.remove('open');
+}
+
+async function attemptSignIn() {
+  const email    = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const errEl    = document.getElementById('auth-error');
+  if (!email || !password) { errEl.textContent = 'Enter email and password.'; return; }
+  errEl.textContent = '⏳ Signing in…';
+  try {
+    const { data, error } = await _sb.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    _jwt         = data.session.access_token;
+    _currentUser = data.user;
+    await onSignIn();
+  } catch (e) {
+    errEl.textContent = '❌ ' + (e.message || 'Sign-in failed.');
+  }
+}
+
+async function onSignIn() {
+  try {
+    const me = await apiGet('/api/me');
+    isAdminMode = me.is_admin;
+  } catch (e) {
+    isAdminMode = false;
+  }
+  if (isAdminMode) {
+    document.getElementById('admin-badge').classList.add('visible');
+    document.getElementById('admin-lock-btn').classList.add('visible');
+    document.getElementById('admin-login-btn').textContent = '⚙️🔓';
+    document.body.classList.add('admin-mode');
+    // Reload authenticated data
+    await loadData(true);
+    document.getElementById('auth-login-view').style.display = 'none';
+    document.getElementById('auth-panel-view').style.display = 'block';
+    populateAdminSelects();
+    document.querySelectorAll('.admin-mode-banner').forEach(b => b.classList.add('visible'));
+  }
+  document.getElementById('auth-modal').classList.remove('open');
+  renderProjects(); renderPeopleTab('all'); runSearch();
+}
+
+function lockAdmin() {
+  _sb.auth.signOut();
+  _jwt = null; _currentUser = null; isAdminMode = false;
+  document.getElementById('admin-badge').classList.remove('visible');
+  document.getElementById('admin-lock-btn').classList.remove('visible');
+  document.getElementById('admin-login-btn').textContent = '⚙️';
+  document.body.classList.remove('admin-mode');
+  document.getElementById('auth-modal').classList.remove('open');
+  document.querySelectorAll('.admin-mode-banner').forEach(b => b.classList.remove('visible'));
+  // Reload demo data
+  loadData(false).then(() => { renderProjects(); renderPeopleTab('all'); runSearch(); });
+}
+
+/* ── Admin mutation helpers (replace ghAutoSave) ── */
+async function adminSaveMsg(msgEl, action) {
+  try {
+    await action();
+    if (msgEl) { msgEl.style.color = 'var(--green)'; msgEl.textContent = '✓ Saved'; setTimeout(() => msgEl.textContent = '', 3000); }
+  } catch(e) {
+    if (msgEl) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '❌ ' + e.message; }
+  }
+}
+async function ghAutoSave() {} // no-op — writes now go through adminReassign/adminUpdateStatus/etc directly
+
+/* ── Admin: Reassign team member ──────────────────── */
+async function adminReassign() {
+  const empId  = document.getElementById('a-emp').value;
+  const projId = document.getElementById('a-proj').value;
+  const action = document.getElementById('a-action').value;
+  const proj   = PROJECTS.find(p => p.id === projId);
+  const emp    = EMPLOYEES.find(e => e.id === empId);
+  const msg    = document.getElementById('reassign-msg');
+  if (!proj || !emp) { msg.style.color = 'var(--red)'; msg.textContent = 'Could not find project or employee.'; return; }
+  await adminSaveMsg(msg, async () => {
+    const updated = await apiPost(`/api/projects/${projId}/team`, { employee_id: empId, action });
+    const idx = PROJECTS.findIndex(p => p.id === projId);
+    if (idx >= 0) PROJECTS[idx] = updated;
+    msg.style.color = 'var(--green)';
+    msg.textContent = `✓ ${emp.name} ${action === 'add' ? 'added to' : 'removed from'} "${proj.name}"`;
+    renderProjects(); renderPeopleTab('all'); runSearch();
+  });
+}
+
+/* ── Admin: Update project status ─────────────────── */
+async function adminUpdateStatus() {
+  const projId = document.getElementById('a-status-proj').value;
+  const val    = document.getElementById('a-status-val').value;
+  const msg    = document.getElementById('status-msg');
+  const proj   = PROJECTS.find(p => p.id === projId);
+  if (!proj) { msg.style.color = 'var(--red)'; msg.textContent = 'Project not found.'; return; }
+  await adminSaveMsg(msg, async () => {
+    const updated = await apiPatch(`/api/projects/${projId}`, { status: val });
+    const idx = PROJECTS.findIndex(p => p.id === projId);
+    if (idx >= 0) PROJECTS[idx] = updated;
+    msg.style.color = 'var(--green)';
+    msg.textContent = `✓ "${proj.name}" → ${val}`;
+    renderProjects();
+  });
+}
+
+/* ── Admin: Add new project ───────────────────────── */
+async function adminAddProject() {
+  const name = document.getElementById('a-new-name').value.trim();
+  const lead = document.getElementById('a-new-lead').value;
+  const obj  = document.getElementById('a-new-obj').value.trim();
+  const msg  = document.getElementById('new-proj-msg');
+  if (!name) { msg.style.color = 'var(--red)'; msg.textContent = 'Please enter a project name.'; return; }
+  await adminSaveMsg(msg, async () => {
+    const created = await apiPost('/api/projects', {
+      name, status: 'planning', contact: lead, objective: obj || 'TBD',
+      tasks: ['Define scope', 'Assign team', 'Kick off'], team: lead ? [lead] : []
+    });
+    PROJECTS.push(created);
+    populateAdminSelects(); renderProjects(); runSearch();
+    msg.style.color = 'var(--green)'; msg.textContent = `✓ "${name}" created!`;
+    document.getElementById('a-new-name').value = '';
+    document.getElementById('a-new-obj').value = '';
+  });
+}
+
+/* ── Admin: Delete project ────────────────────────── */
+async function adminDeleteProject() {
+  const projId = document.getElementById('a-del-proj').value;
+  const proj   = PROJECTS.find(p => p.id === projId);
+  const msg    = document.getElementById('del-proj-msg');
+  if (!proj) { msg.style.color = 'var(--red)'; msg.textContent = 'Project not found.'; return; }
+  if (!confirm(`Remove "${proj.name}"? This cannot be undone.`)) return;
+  const pname = proj.name;
+  await adminSaveMsg(msg, async () => {
+    await apiDelete(`/api/projects/${projId}`);
+    const idx = PROJECTS.findIndex(p => p.id === projId);
+    if (idx >= 0) PROJECTS.splice(idx, 1);
+    populateAdminSelects(); renderProjects(); runSearch();
+    msg.style.color = 'var(--green)'; msg.textContent = `✓ "${pname}" removed.`;
+  });
+}
+
+function populateAdminSelects() {
+  const empOpts  = EMPLOYEES.map(e => `<option value="${e.id}">${e.name} (${e.office})</option>`).join('');
+  const projOpts = PROJECTS.map(p  => `<option value="${p.id}">${p.name}</option>`).join('');
+  ['a-emp','a-new-lead'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = empOpts; });
+  ['a-proj','a-status-proj','a-del-proj'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = projOpts; });
+}
+
+/* ── Export (kept for compat — exports current state) */
+function exportHubData() {
+  const json = JSON.stringify({ employees: EMPLOYEES, projects: PROJECTS, exported: new Date().toISOString() }, null, 2);
+  navigator.clipboard.writeText(json).catch(() => {});
+  const statusEl = document.getElementById('export-status');
+  if (statusEl) { statusEl.textContent = '✓ JSON copied to clipboard!'; statusEl.style.color = 'var(--green)'; }
+}
+
+/* Legacy no-ops — admin panel still references these */
+function saveGhConfig(){}
+function testGhConnection(){}
+function pushToGitHub(){}
+function pullFromGitHub(){}
+function setGhStatus(){}
+
+// Apply email map to all employees
+const EMAIL_MAP={
+  "julianne_b":"jb_xvqr@vilecorp.com",
+  // Lakeford
+  "adam_a":"aa_mtzk@vilecorp.com","ahmed_h":"ah_plwn@vilecorp.com","andres_b":"ab_fxqj@vilecorp.com",
+  "brian_t":"bt_rnhc@vilecorp.com","carlos_v":"cv_dzwp@vilecorp.com","chris_w":"cw_ykmf@vilecorp.com",
+  "davy_t":"dt_sqvb@vilecorp.com","jack_p":"jp_hlzr@vilecorp.com","jasmine_p":"jap_wncx@vilecorp.com",
+  "jessica_i":"ji_tqbm@vilecorp.com","jimmy_e":"je_vkrp@vilecorp.com","juliana_g":"jg_mxwf@vilecorp.com",
+  "kevin_h":"kh_zntq@vilecorp.com","lesly_m":"lm_bvxp@vilecorp.com","lindsay_c":"lc_qjfw@vilecorp.com",
+  "matty_h":"mh_rpzk@vilecorp.com","michael_l":"ml_xvcn@vilecorp.com","nyisha_c":"nc_wqbt@vilecorp.com",
+  "nysha_j":"nj_fmpx@vilecorp.com","oscar_c":"oc_hvzr@vilecorp.com","rj_g":"rg_tknw@vilecorp.com",
+  "ruben_a":"ra_pjxq@vilecorp.com","ruby_s":"rs_mvzb@vilecorp.com","trung_n":"tn_fwkc@vilecorp.com",
+  "elliott_w":"ew_qxrp@vilecorp.com","anthony_f":"af_znhm@vilecorp.com",
+  // Pinecrest
+  "anique_b":"anb_xkqv@vilecorp.com","becca_f":"bf_mwzp@vilecorp.com","chris_c":"cc_rvnj@vilecorp.com",
+  "evan_h":"eh_qtxb@vilecorp.com","fermin_s":"fs_wkzn@vilecorp.com","john_t":"jt_pmxv@vilecorp.com",
+  "kristy_m":"km_bqrf@vilecorp.com","kyla_s":"ks_zhwp@vilecorp.com","lily_c":"lc_xvnq@vilecorp.com",
+  "morgan_c":"mc_ftrz@vilecorp.com","omar_m":"om_wkjb@vilecorp.com","parker_r":"pr_xnqv@vilecorp.com",
+  "taylor_t":"tt_mzwf@vilecorp.com",
+  // Easthaven
+  "aimee_w":"aw_qxpb@vilecorp.com","blair_w":"blw_rvzk@vilecorp.com","cady_l":"cl_mnjx@vilecorp.com",
+  "cassandra_q":"cq_fwbt@vilecorp.com","cindy_l":"cdl_xrqp@vilecorp.com","dan_wei":"dw_kzmv@vilecorp.com",
+  "dan_yu":"dy_bnxf@vilecorp.com","elaine_k":"ek_wqtz@vilecorp.com","faiqa_i":"fi_rpjx@vilecorp.com",
+  "hadi_s":"hs_vzmq@vilecorp.com","hongfeng_x":"hx_bkwn@vilecorp.com",
+  "iris_l":"il_qxrv@vilecorp.com","jin_q":"jq_mfzp@vilecorp.com","joel_p":"jolp_wntx@vilecorp.com",
+  "katie_z":"kz_rqbv@vilecorp.com","keith_c":"kc_xpmw@vilecorp.com","laura_w":"lw_znqf@vilecorp.com",
+  "lily_b":"lb_xvtk@vilecorp.com","michelle_s":"ms_qrwz@vilecorp.com","ming_j":"mj_bxnp@vilecorp.com",
+  "brandon_l":"bnl_fkqv@vilecorp.com","shashi_c":"sc_mwzr@vilecorp.com",
+  "snow_l":"sl_xpnq@vilecorp.com","suman_k":"sk_fvbt@vilecorp.com","yunmi_k":"yk_qzrx@vilecorp.com"
+};
+EMPLOYEES.forEach(e=>{if(!e.email&&EMAIL_MAP[e.id])e.email=EMAIL_MAP[e.id];});
+
+/* ═══════════════════════════════════════════════════
+   CONNECTIONS PAGE — Mind Map + Team Map (D3.js)
+═══════════════════════════════════════════════════ */
+let connFilter='all', mmSim=null, geoMapLayer='work', geoReady=false;
+const OFFICE_CLR={Metroburg:'#a0621a',Lakeford:'#1a5c38',Pinecrest:'#4e1c72',Easthaven:'#0e5454'};
+
+// ── City → [lon, lat] lookup ──────────────────────
+const EMPLOYEE_GEO={
+  "ali":[-97.7431,30.2672,"Austin, TX"],
+  "amber":[-97.7431,30.2672,"Austin, TX"],
+  "brandon":[-97.7431,30.2672,"Austin, TX"],
+  "chris_a":[-97.7431,30.2672,"Austin, TX"],
+  "david":[-98.4936,29.4241,"San Antonio, TX"],
+  "dylan":[-97.7431,30.2672,"Austin, TX"],
+  "gen":[-96.797,32.7767,"Dallas, TX"],
+  "jacob":[-97.7431,30.2672,"Austin, TX"],
+  "jeff":[-97.7431,30.2672,"Austin, TX"],
+  "julia":[-97.7431,30.2672,"Austin, TX"],
+  "morgan":[-74.006,40.7128,"New York, NY"],
+  "lisa":[-97.7431,30.2672,"Austin, TX"],
+  "nodira":[-97.7431,30.2672,"Austin, TX"],
+  "sarah":[-96.797,32.7767,"Dallas, TX"],
+  "will":[-71.0589,42.3601,"Boston, MA"],
+  "hong_li":[-118.2437,34.0522,"Los Angeles, CA"],
+  "sarina_s":[-118.2437,34.0522,"Los Angeles, CA"],
+  "adam_a":[-118.2437,34.0522,"Los Angeles, CA"],
+  "ahmed_h":[-118.2437,34.0522,"Los Angeles, CA"],
+  "andres_b":[-118.2437,34.0522,"Los Angeles, CA"],
+  "brian_t":[-118.2437,34.0522,"Los Angeles, CA"],
+  "carlos_v":[-118.2437,34.0522,"Los Angeles, CA"],
+  "chris_w":[-118.2437,34.0522,"Los Angeles, CA"],
+  "davy_t":[-118.2437,34.0522,"Los Angeles, CA"],
+  "jack_p":[-118.2437,34.0522,"Los Angeles, CA"],
+  "jasmine_p":[-118.2437,34.0522,"Los Angeles, CA"],
+  "jessica_i":[-117.8265,33.6395,"Orange County, CA"],
+  "jimmy_e":[-118.2437,34.0522,"Los Angeles, CA"],
+  "juliana_g":[-117.8265,33.6395,"Orange County, CA"],
+  "kevin_h":[-118.2437,34.0522,"Los Angeles, CA"],
+  "lesly_m":[-118.2437,34.0522,"Los Angeles, CA"],
+  "lindsay_c":[-118.2437,34.0522,"Los Angeles, CA"],
+  "matty_h":[-117.8265,33.6395,"Orange County, CA"],
+  "michael_l":[-118.2437,34.0522,"Los Angeles, CA"],
+  "nyisha_c":[-118.2437,34.0522,"Los Angeles, CA"],
+  "nysha_j":[-118.2437,34.0522,"Los Angeles, CA"],
+  "oscar_c":[-118.2437,34.0522,"Los Angeles, CA"],
+  "rj_g":[-117.8265,33.6395,"Orange County, CA"],
+  "ruben_a":[-118.2437,34.0522,"Los Angeles, CA"],
+  "ruby_s":[-118.2437,34.0522,"Los Angeles, CA"],
+  "trung_n":[-118.2437,34.0522,"Los Angeles, CA"],
+  "elliott_w":[-118.2437,34.0522,"Los Angeles, CA"],
+  "anthony_f":[-117.8265,33.6395,"Orange County, CA"],
+  "julianne_b":[-74.006,40.7128,"New York, NY"],
+  "anique_b":[-74.006,40.7128,"New York, NY"],
+  "asia_o":[-74.006,40.7128,"New York, NY"],
+  "becca_f":[-74.006,40.7128,"New York, NY"],
+  "brittany_f":[-74.006,40.7128,"New York, NY"],
+  "catherine_l":[-74.006,40.7128,"New York, NY"],
+  "chantel_r":[-74.006,40.7128,"New York, NY"],
+  "chris_c":[-74.006,40.7128,"New York, NY"],
+  "ehren_d":[-74.006,40.7128,"New York, NY"],
+  "fermin_s":[-74.006,40.7128,"New York, NY"],
+  "hannah_b":[-74.006,40.7128,"New York, NY"],
+  "jay_w":[-74.006,40.7128,"New York, NY"],
+  "jing_y":[-74.006,40.7128,"New York, NY"],
+  "john_t":[-74.006,40.7128,"New York, NY"],
+  "kris_k":[-74.006,40.7128,"New York, NY"],
+  "kristy_m":[-74.006,40.7128,"New York, NY"],
+  "kyla_s":[-74.006,40.7128,"New York, NY"],
+  "lily_c":[-74.006,40.7128,"New York, NY"],
+  "mohana_m":[-74.006,40.7128,"New York, NY"],
+  "morgan_c":[-74.006,40.7128,"New York, NY"],
+  "nikki_s":[-74.006,40.7128,"New York, NY"],
+  "omar_k":[-74.006,40.7128,"New York, NY"],
+  "omar_m":[-74.006,40.7128,"New York, NY"],
+  "parker_r":[-74.006,40.7128,"New York, NY"],
+  "taylor_t":[-74.006,40.7128,"New York, NY"],
+  "evan_h":[-74.006,40.7128,"New York, NY"],
+  "jesse_c":[-74.006,40.7128,"New York, NY"],
+  "aimee_w":[-0.1276,51.5074,"London, UK"],
+  "blair_w":[-0.1276,51.5074,"London, UK"],
+  "cady_l":[-0.1276,51.5074,"London, UK"],
+  "cassandra_q":[-0.1276,51.5074,"London, UK"],
+  "cindy_l":[-0.1276,51.5074,"London, UK"],
+  "dan_wei":[-0.1276,51.5074,"London, UK"],
+  "dan_yu":[-0.1276,51.5074,"London, UK"],
+  "elaine_k":[-0.1276,51.5074,"London, UK"],
+  "hadi_s":[-0.1276,51.5074,"London, UK"],
+  "hongfeng_x":[-0.1276,51.5074,"London, UK"],
+  "iris_l":[-0.1276,51.5074,"London, UK"],
+  "jin_q":[-0.1276,51.5074,"London, UK"],
+  "joel_p":[-0.1276,51.5074,"London, UK"],
+  "katie_z":[-0.1276,51.5074,"London, UK"],
+  "keith_c":[-0.1276,51.5074,"London, UK"],
+  "laura_w":[-0.1276,51.5074,"London, UK"],
+  "lily_b":[-0.1276,51.5074,"London, UK"],
+  "michelle_s":[-0.1276,51.5074,"London, UK"],
+  "ming_j":[-0.1276,51.5074,"London, UK"],
+  "shashi_c":[-0.1276,51.5074,"London, UK"],
+  "snow_l":[-0.1276,51.5074,"London, UK"],
+  "suman_k":[-0.1276,51.5074,"London, UK"],
+  "yunmi_k":[-0.1276,51.5074,"London, UK"],
+  "faiqa_i":[-0.1276,51.5074,"London, UK"],
+  "brandon_l":[-0.1276,51.5074,"London, UK"]
+};
+
+// ── GEO_SPECIFIC — precise lat/lon lookup (most-specific first) ──
+function GEO_SPECIFIC(loc){
+  if(!loc) return null;
+  const l=loc.toLowerCase().trim();
+
+  // Easthaven neighborhoods (use district-level coords)
+  const sgN={
+    'fernvale':[103.869,1.392],'sengkang':[103.873,1.391],'woodlands':[103.786,1.437],
+    'punggol':[103.906,1.403],'buangkok':[103.872,1.382],'tampines north':[103.958,1.374],
+    'tampines':[103.953,1.352],'clementi':[103.765,1.314],'ang mo kio':[103.848,1.370],
+    'amk':[103.848,1.370],'serangoon north':[103.876,1.363],'serangoon':[103.873,1.350],
+    'yew tee':[103.747,1.397],'kent ridge':[103.785,1.294],'potong pasir':[103.868,1.332],
+    'khatib':[103.832,1.418],'johor bahru':[103.743,1.492],'johor':[103.743,1.492]
+  };
+  for(const[n,c] of Object.entries(sgN)){if(l.includes(n)) return c;}
+  if(l.includes('singapore')) return [103.820,1.352];
+
+  // US + International — sorted longest-match-first at call time
+  const places=[
+    // Specific CA suburbs
+    ['south sacramento',[-121.471,38.511]],['citrus heights',[-121.279,38.692]],
+    ['elk grove, ca',[-121.374,38.432]],['elk grove',[-121.374,38.432]],
+    ['roseville, ca',[-121.288,38.752]],['loomis',[-121.193,38.828]],
+    ['burlingame',[-122.365,37.584]],['san bernardino',[-117.298,34.108]],
+    ['san bernadino',[-117.298,34.108]],['san jose, ca',[-121.894,37.339]],
+    ['santa rosa',[-122.714,38.440]],['salinas',[-121.655,36.677]],
+    ['stockton',[-121.291,37.951]],['modesto',[-120.997,37.639]],
+    ['lodi, ca',[-121.273,38.130]],['ramona',[-116.873,33.042]],
+    ['greater austin',[-97.743,30.267]],['taylor, tx',[-97.410,30.570]],
+    ['round rock',[-97.678,30.508]],['plano',[-96.700,33.020]],
+    ['katy, tx',[-95.824,29.788]],['san antonio',[-98.494,29.424]],
+    ['fredericksburg, tx',[-98.872,30.274]],['nacogdoches',[-94.655,31.603]],
+    ['el paso',[-106.487,31.758]],['westlake, fl',[-80.304,26.659]],
+    ['tallahassee',[-84.280,30.438]],['cumberland, md',[-78.762,39.652]],
+    ['windsor, ontario',[-83.030,42.298]],['the bronx',[-73.865,40.844]],
+    ['western pennsylvania',[-79.990,40.440]],["o'fallon",[-90.699,38.812]],
+    ['cary, nc',[-78.781,35.791]],['cary',[-78.781,35.791]],
+    ['durham, nc',[-78.899,35.994]],['morrisville, nc',[-78.827,35.823]],
+    ['henderson, nc',[-78.399,36.329]],['apex, nc',[-78.850,35.732]],
+    ['clayton, nc',[-78.459,35.650]],['wendell',[-78.369,35.790]],
+    ['san francisco',[-122.419,37.775]],['philadelphia',[-75.165,39.952]],
+    ['miami, fl',[-80.192,25.773]],['miami',[-80.192,25.773]],
+    ['goodyear',[-112.357,33.435]],['new paltz',[-74.087,41.748]],
+    
+    // ── Metro aliases added for Team Intelligence Hub ──
+    ['central london',[  -0.1276,51.5074]],
+    ['london, uk',    [  -0.1276,51.5074]],
+    ['new york, ny',  [ -74.0060,40.7128]],
+    ['los angeles, ca',[-118.2437,34.0522]],
+    ['austin, tx',    [ -97.7431,30.2672]],
+    // General US cities
+    ['sacramento',[-121.494,38.581]],['raleigh',[-78.638,35.779]],
+    ['austin',[-97.743,30.267]],['boston',[-71.059,42.360]],
+    ['bahston',[-71.059,42.360]],['new york',[-74.005,40.713]],
+    ['san diego',[-117.161,32.716]],['phoenix',[-112.074,33.448]],
+    ['maryland',[-76.641,39.045]],['florida',[-81.516,27.766]],
+    ['atlanta',[-84.388,33.749]],
+    // International
+    ['hong kong',[114.109,22.396]],['dalian',[121.602,38.914]],
+    ['harbin',[126.534,45.803]],['jinan',[117.000,36.668]],
+    ['xinjiang',[87.628,39.472]],["xi'an",[108.940,34.341]],
+    ['jilin',[126.549,43.838]],['shenyang',[123.431,41.796]],
+    ['weihai',[122.103,37.513]],['jiangsu',[118.797,32.066]],
+    ['jiang su',[118.797,32.066]],['kolkata',[88.363,22.572]],
+    ['manila',[120.984,14.599]],['philippines',[122.566,12.879]],
+    ['malaysia',[101.687,3.140]],['south korea',[127.766,35.907]],
+    ['uzbekistan',[64.585,41.299]],['nigeria',[8.677,9.082]],
+    ['osaka',[135.502,34.693]],['japan',[138.252,36.204]],
+    ['puerto rico',[-66.590,18.220]],['san juan',[-66.105,18.467]],
+    ['el salvador',[-88.897,13.794]],['venezuela',[-66.904,10.482]],
+    ["michoacán",[-101.186,19.702]],['mexico',[-102.553,23.634]],
+    ['india',[78.962,20.594]],['pakistan',[69.345,30.376]],
+    ['china',[104.195,35.861]],['vietnam',[108.277,14.058]],
+    ['ontario',[-79.230,43.650]],
+  ];
+  // Sort longest key first so 'elk grove, ca' beats 'elk grove'
+  places.sort((a,b)=>b[0].length-a[0].length);
+  for(const[k,v] of places){if(l.includes(k)) return v;}
+  return null;
+}
+
+// ── Build one entry per employee ──────────────────
+function buildIndividualGeoData(layer){
+  const coordIndex={}, coordTotal={};
+  const raw=EMPLOYEES.map(emp=>{
+    const locStr=layer==='work'?(emp.locations.work||emp.office)
+      :layer==='home'?emp.locations.home:emp.locations.childhood;
+    if(!locStr) return null;
+    const coords=EMPLOYEE_GEO[emp.id]
+      ? [EMPLOYEE_GEO[emp.id][0], EMPLOYEE_GEO[emp.id][1]]
+      : GEO_SPECIFIC(locStr);
+    if(!coords) return null;
+    const key=coords.map(v=>Math.round(v*100)/100).join(',');
+    coordTotal[key]=(coordTotal[key]||0)+1;
+    return{emp,coords,key,locStr:EMPLOYEE_GEO[emp.id] ? EMPLOYEE_GEO[emp.id][2] : locStr.split(',')[0].trim()};
+  }).filter(Boolean);
+  return raw.map(pt=>{
+    coordIndex[pt.key]=(coordIndex[pt.key]||0)+1;
+    return{...pt,idx:coordIndex[pt.key]-1,total:coordTotal[pt.key]};
+  });
+}
+
+// ── MIND MAP ─────────────────────────────────────
+// ── Interest normalization — merge synonyms, group categories ──
+function normalizeInterest(raw){
+  const s=raw.toLowerCase().trim();
+
+  // ── EXACT / near-exact synonym merges ────────────────────────
+  if(/^going to the gym$|^working out$|^focussing on my health$|^health focus$/.test(s)) return 'Fitness & Working Out';
+  if(/^travelling$|^travel & outdoor with kids$|^food exploration when travelling$/.test(s)) return 'Travel';
+  if(/reading \(audio|reading.*audiobook/i.test(s)) return 'Reading';
+  if(/^pc gaming$/.test(s)) return 'Gaming';
+  if(/^dogs and dog training$|^walking my dogs$|^taking my dog out to new locations to explore$|^snuggling my puppies$|^dogs, food/.test(s)) return 'Dogs & Pets';
+  if(/^music creation$|^making music$|^learning to play guitar$/.test(s)) return 'Music';
+  if(/^diy home improvement$|^diy tinkering$|^diy projects$/.test(s)) return 'DIY Projects';
+  if(/^outdoor activities.*fishing|^outdoor activities like fishing/.test(s)) return 'Outdoors & Fishing';
+  if(/^random history factoids$|^history and random trivia$|^history \( all history/.test(s)) return 'History';
+  if(/^watching basketball\/football|^watching all sports$|^following basketball$/.test(s)) return 'Watching Sports';
+  if(/^food \(cooking & eating\)$|^food \(cooking/.test(s)) return 'Food & Cooking';
+  if(/^cooking something new$|^learning to cook$/.test(s)) return 'Cooking';
+  if(/^playing guitar$/.test(s)) return 'Music';
+  if(/^swimming\/waterpolo$/.test(s)) return 'Swimming & Waterpolo';
+  if(/^detailing my car$|^cars$/.test(s)) return 'Cars';
+  if(/^clearing open world maps in video games$/.test(s)) return 'Gaming';
+  if(/^extensive time with dogs$/.test(s)) return 'Dogs & Pets';
+  if(/^netflix and chill$|^binging on netflix$/.test(s)) return 'Movies & TV';
+  if(/^watching movies\/tv shows$/.test(s)) return 'Movies & TV';
+  if(/^spending time with family$|^spend time with friends$|^gathering with family or friends$/.test(s)) return 'Family & Friends';
+  if(/^decluttering and packing$|^room organization$|^space organisation$/.test(s)) return 'Organizing & Decluttering';
+  if(/^trying new food spots$|^checking out food spots with my wife$|^trying new coffee spots$/.test(s)) return 'Food & Dining Out';
+
+  return null; // keep original
+}
+
+// ── Category map for force clustering (related things attract) ──
+const INTEREST_CATEGORY={
+  Food:(s)=>/cook|bak|culinar|grilling|bbq|food.*eat|eat.*food|flavor|yapping|dining/i.test(s),
+  Fitness:(s)=>/gym|fitness|work.*out|running|cycling|biking|swimming|yoga|pilates|jog|snowboard|surfing|health/i.test(s),
+  Animals:(s)=>/\bdog\b|\bdogs\b|pet\b|puppy|puppies|\bcat\b/i.test(s),
+  Travel:(s)=>/\btravel\b|travell|road trip|international travel|exploring small/i.test(s),
+  Arts:(s)=>/draw|paint|\bart\b|sculpture|coloring|craft|sewing|alter|knitting|origami|calligraph|\bdesign\b/i.test(s),
+  Tech:(s)=>/gaming|video game|pc gaming|3d print|ttrpg|\bdnd\b|gunpla|space sim|building.*pc|scripting|automat/i.test(s),
+  Music:(s)=>/\bmusic\b|guitar|piano|\bdj\b|singing|\bsong\b|audio engine|drum and bass/i.test(s),
+  Film:(s)=>/photo|videograph|film\b|cinema|cinephile|\bmovie|drone/i.test(s),
+  Writing:(s)=>/writing|journaling|blog|planner journal|content creation|storytelling/i.test(s),
+  Sports:(s)=>/\bsoccer\b|\bfootball\b|\bbasketball\b|\bbaseball\b|\btennis\b|\bvolleyball\b|\bsports\b/i.test(s),
+  History:(s)=>/history|trivia|random history|factoid|anthropology/i.test(s),
+  Outdoors:(s)=>/hiking|backpack|camping|\boutdoors\b|fishing|nature|gardening|bonsai|plant/i.test(s),
+};
+function getCategory(label){
+  for(const[cat,test] of Object.entries(INTEREST_CATEGORY)){if(test(label)) return cat;}
+  return 'Other';
+}
+
+function buildInterestMap(filter){
+  const map={};
+  EMPLOYEES.forEach(emp=>{
+    const items=[];
+    if(filter!=='hobbies') emp.nonWorkSkills.forEach(s=>{if(s&&s.trim()) items.push({t:s.trim(),tp:'nw'});});
+    if(filter!=='nonwork') emp.hobbies.forEach(h=>{if(h&&h.trim()) items.push({t:h.trim(),tp:'hb'});});
+    items.forEach(item=>{
+      const label=normalizeInterest(item.t)||item.t;  // normalize synonyms
+      const key=label.toLowerCase();
+      if(!map[key]) map[key]={id:'i_'+key,label,type:item.tp,people:new Set(),originals:new Set()};
+      map[key].people.add(emp.id);
+      map[key].originals.add(item.t); // keep for search matching
+    });
+  });
+  return Object.values(map).map(n=>({
+    ...n,
+    people:[...n.people],
+    originals:[...n.originals],
+    count:n.people.size,
+    category:getCategory(n.label)
+  }));
+}
+
+function renderMindMap(filter){
+  if(!window.d3){
+    document.getElementById('mindmap-container').innerHTML='<p style="padding:20px;color:var(--muted);text-align:center">Loading D3.js… try refreshing.</p>';
+    return;
+  }
+  connFilter=filter;
+  const container=document.getElementById('mindmap-container');
+  const W=container.clientWidth||800, H=520;
+  const svg=d3.select('#mindmap-svg').attr('width',W).attr('height',H);
+  svg.selectAll('*').remove();
+  if(mmSim) mmSim.stop();
+
+  const iNodes=buildInterestMap(filter);
+  const maxCnt=Math.max(...iNodes.map(n=>n.count),1);
+  const showPpl=document.getElementById('mm-show-people')?.checked;
+  const pNodes=showPpl?EMPLOYEES.map(e=>({id:'p_'+e.id,empId:e.id,name:e.name,office:e.office,isPerson:true})):[];
+  const allNodes=[...iNodes,...pNodes];
+  const links=[];
+  if(showPpl){
+    EMPLOYEES.forEach(emp=>{
+      const keys=[];
+      if(filter!=='hobbies') emp.nonWorkSkills.forEach(s=>{if(s) keys.push(s.trim().toLowerCase());});
+      if(filter!=='nonwork') emp.hobbies.forEach(h=>{if(h) keys.push(h.trim().toLowerCase());});
+      keys.forEach(k=>{ if(iNodes.find(n=>n.id==='i_'+k)) links.push({source:'p_'+emp.id,target:'i_'+k}); });
+    });
+  }
+
+  const g=svg.append('g');
+  svg.call(d3.zoom().scaleExtent([0.15,6]).on('zoom',e=>g.attr('transform',e.transform)));
+
+  const linkSel=showPpl?g.append('g').selectAll('line').data(links).enter().append('line')
+    .attr('stroke','var(--border)').attr('stroke-width',0.5).attr('stroke-opacity',0.5):null;
+
+  const nodeR=d=>d.isPerson?4:Math.max(5,5+Math.sqrt(d.count/maxCnt)*24);
+
+  const nodeSel=g.append('g').selectAll('circle').data(allNodes).enter().append('circle')
+    .attr('r',nodeR)
+    .attr('fill',d=>d.isPerson?(OFFICE_CLR[d.office]||'#9ca3af'):(d.type==='nw'?'#7c3aed':'#16a34a'))
+    .attr('fill-opacity',d=>d.isPerson?0.5:0.82)
+    .attr('stroke',d=>d.isPerson?'none':'#fff')
+    .attr('stroke-width',1.5)
+    .style('cursor',d=>d.isPerson?'default':'pointer')
+    .on('click',(ev,d)=>{ if(!d.isPerson) showInterest(encodeURIComponent(d.label)); })
+    .call(d3.drag()
+      .on('start',(ev,d)=>{if(!ev.active)mmSim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
+      .on('drag',(ev,d)=>{d.fx=ev.x;d.fy=ev.y;})
+      .on('end',(ev,d)=>{if(!ev.active)mmSim.alphaTarget(0);d.fx=null;d.fy=null;}));
+
+  nodeSel.append('title').text(d=>d.isPerson?d.name:`${d.label} (${d.count} ${d.count===1?'person':'people'})`);
+
+  // Labels: multi-person nodes get visible labels, single-person get faint
+  const lblData=iNodes.filter(n=>n.count>=2);
+  const singleData=iNodes.filter(n=>n.count===1);
+
+  const lblSel=g.append('g').selectAll('text').data(lblData).enter().append('text')
+    .text(d=>d.label)
+    .attr('text-anchor','middle')
+    .attr('font-family','var(--font)')
+    .attr('fill',d=>d.type==='nw'?'#7c3aed':'#16a34a')
+    .attr('font-size',d=>Math.max(9,8+Math.sqrt(d.count/maxCnt)*7))
+    .attr('dy',d=>-(nodeR(d)+3))
+    .attr('pointer-events','none');
+
+  const sLbl=g.append('g').selectAll('text').data(singleData).enter().append('text')
+    .text(d=>d.label)
+    .attr('text-anchor','middle')
+    .attr('font-family','var(--font)')
+    .attr('fill','#d1d5db')
+    .attr('font-size',7)
+    .attr('dy',-10)
+    .attr('pointer-events','none');
+
+  mmSim=d3.forceSimulation(allNodes);
+  if(showPpl) mmSim.force('link',d3.forceLink(links).id(d=>d.id).distance(70).strength(0.15));
+  mmSim
+    .force('charge',d3.forceManyBody().strength(d=>d.isPerson?-6:-20*Math.sqrt(d.count||1)))
+    .force('center',d3.forceCenter(W/2,H/2))
+    .force('collide',d3.forceCollide().radius(d=>nodeR(d)+3))
+    .force('category',alpha=>{
+      // Gently pull same-category nodes toward each other's centroid
+      const centroids={};
+      iNodes.forEach(n=>{
+        if(!n.category||n.category==='Other'||n.x==null) return;
+        if(!centroids[n.category]) centroids[n.category]={x:0,y:0,count:0};
+        centroids[n.category].x+=n.x; centroids[n.category].y+=n.y; centroids[n.category].count++;
+      });
+      iNodes.forEach(n=>{
+        const c=centroids[n.category];
+        if(!c||c.count<2) return;
+        n.vx+=(c.x/c.count-n.x)*0.04*alpha;
+        n.vy+=(c.y/c.count-n.y)*0.04*alpha;
+      });
+    });
+
+  mmSim.on('tick',()=>{
+    if(linkSel) linkSel.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    nodeSel.attr('cx',d=>d.x).attr('cy',d=>d.y);
+    lblSel.attr('x',d=>d.x).attr('y',d=>d.y);
+    sLbl.attr('x',d=>d.x).attr('y',d=>d.y);
+  });
+}
+
+function rerenderMindMap(){ renderMindMap(connFilter); }
+
+function filterMindMap(filter,btn){
+  connFilter=filter;
+  document.querySelectorAll('#conn-filter-tabs .loc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderMindMap(filter);
+}
+
+async function renderGeoMap(layer){
+  geoMapLayer=layer;
+  if(!window.d3||!window.topojson){
+    document.getElementById('geomap-container').innerHTML='<p style="padding:20px;color:var(--muted);text-align:center">Map requires D3.js — try refreshing the page.</p>';
+    return;
+  }
+  const container=document.getElementById('geomap-container');
+  const W=container.clientWidth||900, H=Math.round(W*0.5);
+  const svg=d3.select('#geomap-svg').attr('width',W).attr('height',H);
+  svg.selectAll('*').remove();
+  _geoScale=1;
+
+  let world;
+  try{ world=await d3.json('countries-110m.json'); }
+  catch(e){ console.warn('World atlas load failed',e); }
+
+  const projection=d3.geoNaturalEarth1().scale(W/6.5).translate([W/2,H/2]);
+  const path=d3.geoPath().projection(projection);
+  const g=svg.append('g');
+
+  if(world){
+    g.append('rect').attr('width',W).attr('height',H).attr('fill','#e8f4fd').attr('rx',10);
+    g.append('g').selectAll('path')
+      .data(topojson.feature(world,world.objects.countries).features)
+      .enter().append('path').attr('d',path)
+      .attr('fill','var(--surface2)').attr('stroke','var(--border)').attr('stroke-width',0.3);
+    g.append('path')
+      .datum(topojson.mesh(world,world.objects.countries,(a,b)=>a!==b))
+      .attr('d',path).attr('fill','none').attr('stroke','var(--border)').attr('stroke-width',0.2);
+  } else {
+    g.append('rect').attr('width',W).attr('height',H).attr('fill','var(--surface2)').attr('rx',10);
+    g.append('text').attr('x',W/2).attr('y',H/2).attr('text-anchor','middle').attr('fill','var(--muted)').attr('font-size',13).text('Map loading requires internet access');
+  }
+
+  // Store for zoom re-use
+  _geoPts=buildGeoData(layer);
+  _geoProj=projection;
+  _geoDotsG=g.append('g').attr('class','dots-layer');
+
+  // Initial render
+  drawGeoDots(_geoDotsG, _geoPts, _geoProj, 1, W, H);
+
+  // Zoom with breakout
+  svg.call(d3.zoom().scaleExtent([1,15]).on('zoom',e=>{
+    const newScale=e.transform.k;
+    g.attr('transform',e.transform);
+    // Re-draw dots when crossing the breakout threshold
+    if((newScale>=GEO_BREAKOUT)!==(_geoScale>=GEO_BREAKOUT)){
+      _geoDotsG.selectAll('*').remove();
+      drawGeoDots(_geoDotsG,_geoPts,_geoProj,newScale,W,H);
+    }
+    _geoScale=newScale;
+  }));
+}
+
+function drawGeoDots(container, pts, proj, scale, W, H){
+  if(scale<GEO_BREAKOUT){
+    drawClusterDots(container, pts, proj);
+  } else {
+    drawIndividualDots(container, pts, proj, scale);
+  }
+}
+
+function drawClusterDots(container, pts, proj){
+  const maxSz=Math.max(...pts.map(p=>p.empIds.length),1);
+  pts.forEach(pt=>{
+    const p=proj(pt.coords); if(!p) return;
+    const [x,y]=p;
+    const r=Math.max(6,6+Math.sqrt(pt.empIds.length/maxSz)*16);
+    const offices=pt.empIds.map(id=>EMPLOYEES.find(e=>e.id===id)?.office).filter(Boolean);
+    const oc={}; offices.forEach(o=>oc[o]=(oc[o]||0)+1);
+    const color=OFFICE_CLR[Object.entries(oc).sort((a,b)=>b[1]-a[1])[0]?.[0]]||'#9ca3af';
+
+    const dg=container.append('g').attr('transform',`translate(${x},${y})`).style('cursor','pointer')
+      .on('click',()=>showGeoResult(pt.label,EMPLOYEES.filter(e=>pt.empIds.includes(e.id))));
+
+    if(pt.empIds.length>1) dg.append('circle').attr('r',r+3).attr('fill',color).attr('fill-opacity',0.15);
+    dg.append('circle').attr('r',r).attr('fill',color).attr('fill-opacity',0.82).attr('stroke','#fff').attr('stroke-width',1.5);
+    if(pt.empIds.length>1){
+      dg.append('text').text(pt.empIds.length)
+        .attr('text-anchor','middle').attr('dy','0.35em')
+        .attr('font-size',Math.max(7,r*0.65)).attr('fill','#fff').attr('font-weight',700)
+        .attr('pointer-events','none');
+    }
+    dg.append('title').text(`${pt.label} — ${pt.empIds.length} ${pt.empIds.length===1?'person':'people'}\nZoom in to see individuals`);
+  });
+}
+
+function drawIndividualDots(container, pts, proj, scale){
+  // Show every person as their own dot, spread around their location center
+  pts.forEach(pt=>{
+    const center=proj(pt.coords); if(!center) return;
+    const [cx,cy]=center;
+    const n=pt.empIds.length;
+    // Spread radius: fixed screen-space pixels regardless of map zoom
+    const spread=Math.max(16, 10+n*5) / scale * 4;
+
+    pt.empIds.forEach((empId,i)=>{
+      const angle=n>1?(2*Math.PI*i/n)-Math.PI/2:0;
+      const x=cx+(n>1?spread*Math.cos(angle):0);
+      const y=cy+(n>1?spread*Math.sin(angle):0);
+      const emp=EMPLOYEES.find(e=>e.id===empId);
+      const color=OFFICE_CLR[emp?.office]||'#9ca3af';
+
+      const pg=container.append('g')
+        .attr('transform',`translate(${x},${y})`)
+        .style('cursor','pointer')
+        .on('click',()=>goToProfile(empId));
+
+      pg.append('circle').attr('r',7)
+        .attr('fill',color).attr('fill-opacity',0.9)
+        .attr('stroke','#fff').attr('stroke-width',1.5);
+
+      // Initials inside dot
+      if(emp){
+        const inits=emp.name.split(' ').map(w=>w[0]).join('').slice(0,2);
+        pg.append('text').text(inits)
+          .attr('text-anchor','middle').attr('dy','0.35em')
+          .attr('font-size',5.5).attr('fill','#fff').attr('font-weight',700)
+          .attr('pointer-events','none');
+
+        // Name label with white outline so it's readable over the map
+        pg.append('text').text(emp.name.split(' ')[0])
+          .attr('text-anchor','middle').attr('dy',-11)
+          .attr('font-family','var(--font)').attr('font-size',7.5)
+          .attr('font-weight',600).attr('fill',color)
+          .attr('stroke','white').attr('stroke-width',2.5).attr('paint-order','stroke')
+          .attr('pointer-events','none');
+      }
+      pg.append('title').text(emp?`${emp.name} — click to view profile`:'');
+    });
+  });
+}
+
+function showGeoResult(locLabel,matches){
+  document.getElementById('connections-result-title').innerHTML=`📍 <strong>${matches.length} ${matches.length===1?'person':'people'}</strong> — ${locLabel}`;
+  renderCards(matches,'connections-result-cards');
+  const r=document.getElementById('connections-result');
+  r.style.display='block';
+  setTimeout(()=>r.scrollIntoView({behavior:'smooth',block:'start'}),100);
+}
+
+function initGeoMap(){
+  if(window.d3 && window.topojson){
+    if(!geoReady){ geoReady=true; }
+    renderGeoMap(geoMapLayer);
+  } else {
+    // D3/topojson not yet ready — retry
+    setTimeout(initGeoMap, 100);
+  }
+}
+
+function setMapLayer(layer,btn){
+  geoMapLayer=layer;
+  document.querySelectorAll('#conn-teammap-tabs .loc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderGeoMap(layer);
+}
+
+// ── Interest click (shared) ─────────────────────
+function showInterest(encoded){
+  const label=decodeURIComponent(encoded);
+  // Match canonical label OR any of the original raw strings that normalized to it
+  const iNodes=buildInterestMap('all');
+  const node=iNodes.find(n=>n.label.toLowerCase()===label.toLowerCase());
+  const matches=node
+    ? EMPLOYEES.filter(e=>node.people.includes(e.id))
+    : EMPLOYEES.filter(e=>[...e.nonWorkSkills,...e.hobbies].some(s=>(normalizeInterest(s)||s).toLowerCase()===label.toLowerCase()));
+  document.getElementById('connections-result-title').innerHTML=`👥 <strong>${matches.length} ${matches.length===1?'person shares':'people share'}</strong> &ldquo;${label}&rdquo;`;
+  renderCards(matches,'connections-result-cards');
+  const r=document.getElementById('connections-result');
+  r.style.display='block';
+  setTimeout(()=>r.scrollIntoView({behavior:'smooth',block:'start'}),100);
+  document.querySelectorAll('.conn-bubble').forEach(b=>{
+    const txt=b.childNodes[0]?.textContent?.trim()||'';
+    b.classList.toggle('active',txt.toLowerCase()===label.toLowerCase());
+  });
+}
+
+// ── Main tab switcher ──────────────────────────
+function switchConnMain(view,btn){
+  document.querySelectorAll('#conn-main-tabs .loc-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('conn-mindmap-view').style.display=view==='mindmap'?'block':'none';
+  document.getElementById('conn-teammap-view').style.display=view==='teammap'?'block':'none';
+  if(view==='teammap'&&!geoReady) initGeoMap();
+}
+
+// Called by showPage
+function renderConnectionsPage(){ renderMindMap(connFilter); }
+
+// Legacy compat
+function filterConnectionsTab(filter,btn){ filterMindMap(filter,btn); }
+
+/* ═══════════════════════════════════════════════════
+   INIT — load data then render
+═══════════════════════════════════════════════════ */
+async function loadData(authenticated) {
+  const [emps, projs] = await Promise.all([
+    fetch(API_BASE + (authenticated ? '/api/employees' : '/api/demo/employees'),
+      authenticated ? { headers: { 'Authorization': `Bearer ${_jwt}` } } : {})
+      .then(r => r.json()).catch(() => []),
+    fetch(API_BASE + (authenticated ? '/api/projects' : '/api/demo/projects'),
+      authenticated ? { headers: { 'Authorization': `Bearer ${_jwt}` } } : {})
+      .then(r => r.json()).catch(() => []),
+  ]);
+
+  // Map API shape to frontend shape (workSkills / nonWorkSkills / hobbies)
+  EMPLOYEES.length = 0;
+  emps.forEach(e => EMPLOYEES.push({
+    id:            e.id,
+    name:          e.name,
+    office:        e.office || '',
+    email:         e.email || '',
+    workSkills:    e.workSkills   || [],
+    nonWorkSkills: e.nonWorkSkills || [],
+    hobbies:       e.hobbies      || [],
+    locations: {
+      work:      e.office || '',
+      home:      (e.locations && e.locations.home)  || '',
+      childhood: (e.locations && e.locations.other) || '',
+    },
+    standing:  e.standing || 'green',
+    eligible:  e.eligible !== false,
+    manager:   e.manager  || '',
+    note:      e.note     || '',
+  }));
+
+  PROJECTS.length = 0;
+  projs.forEach(p => PROJECTS.push(p));
+}
+
+(async () => {
+  await loadData(false);
+  renderProjects();
+  renderPeopleTab('all');
+  runSearch();
+})();
+</script>
+</body>
+</html>
