@@ -433,6 +433,7 @@ h1,h2{font-family:'Playfair Display',Georgia,serif !important}
   <button class="nav-btn"        onclick="showPage('search')">🔍 Skills Search</button>
   <button class="nav-btn"        onclick="showPage('connections')">🔗 Connections</button>
   <button class="nav-btn"        onclick="showPage('guide')">👋 Guide</button>
+  <button class="nav-btn" id="audit-nav-btn" onclick="showPage('audit')" style="display:none">🔍 Audit</button>
   <div class="nav-spacer"></div>
   <span class="admin-badge" id="admin-badge">🔐 Admin Mode</span>
   <button class="admin-lock-btn" id="admin-lock-btn" onclick="lockAdmin()">🔒 Lock Admin</button>
@@ -485,6 +486,7 @@ h1,h2{font-family:'Playfair Display',Georgia,serif !important}
     <button class="loc-tab" onclick="filterPeopleTab('Pinecrest',this)">🌟 Pinecrest</button>
     <button class="loc-tab" onclick="filterPeopleTab('Easthaven',this)">🦁 Easthaven</button>
   </div>
+  <div id="review-queue-section" style="display:none"></div>
   <div class="cards-grid" id="people-grid"></div>
 </div>
 
@@ -977,12 +979,13 @@ function showPage(id){
   document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
   document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
   document.getElementById("page-"+id).classList.add("active");
-  const idx={projects:0,people:1,search:2,connections:3,guide:4}[id];
+  const idx={projects:0,people:1,search:2,connections:3,guide:4,audit:5}[id];
   document.querySelectorAll(".nav-btn")[idx].classList.add("active");
   if(id==="projects")    renderProjects();
   if(id==="people")      renderPeopleTab("all");
   if(id==="search")      runSearch();
   if(id==="connections") renderConnectionsPage();
+  if(id==="audit")       renderAudit(_auditView);
 }
 
 /* ═══════════════════════════════════════════════════
